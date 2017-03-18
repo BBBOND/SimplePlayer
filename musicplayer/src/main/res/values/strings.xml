@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">SimplePlayer</string>
+    <string name="label_previous">上一首</string>
+    <string name="label_next">下一首</string>
+    <string name="label_pause">暂停</string>
+    <string name="label_play">播放</string>
+</resources>
