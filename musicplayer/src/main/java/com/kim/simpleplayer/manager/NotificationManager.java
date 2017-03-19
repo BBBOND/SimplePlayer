@@ -2,31 +2,34 @@ package com.kim.simpleplayer.manager;
 
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.os.Bundle;
 import android.os.RemoteException;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.NotificationCompat;
 
 import com.kim.simpleplayer.R;
+import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.helper.ResourceHelper;
 import com.kim.simpleplayer.service.PlayerService;
-
-import java.util.List;
+import com.kim.simpleplayer.utils.GlideUtil;
 
 /**
  * Created by Weya on 2017/3/8.
  */
 
-public class NotificationManager {
+public class NotificationManager extends BroadcastReceiver {
 
     private static final String TAG = NotificationManager.class.getSimpleName();
 
@@ -60,7 +63,6 @@ public class NotificationManager {
 
     public NotificationManager(PlayerService playerService) throws RemoteException {
         this.mPlayerService = playerService;
-
         updateSessionToken();
 
         mNotificationColor = ResourceHelper.getThemeColor(playerService, R.attr.colorPrimary, Color.DKGRAY);
@@ -82,6 +84,71 @@ public class NotificationManager {
         mNotificationManager.cancelAll();
     }
 
+    /**
+     * 开启通知栏
+     */
+    public void startNotification() {
+        if (!mStarted) {
+            mMetadata = mController.getMetadata();
+            mPlaybackState = mController.getPlaybackState();
+
+            Notification notification = createNotification();
+            if (notification != null) {
+                mController.registerCallback(mcb);
+                IntentFilter filter = new IntentFilter();
+                filter.addAction(ACTION_NEXT);
+                filter.addAction(ACTION_PAUSE);
+                filter.addAction(ACTION_PLAY);
+                filter.addAction(ACTION_PREV);
+                mPlayerService.registerReceiver(this, filter);
+
+                mPlayerService.startForeground(NOTIFICATION_ID, notification);
+                mStarted = true;
+            }
+        }
+    }
+
+    public void stopNotification() {
+        if (mStarted) {
+            mStarted = false;
+            mController.unregisterCallback(mcb);
+            try {
+                mNotificationManager.cancel(NOTIFICATION_ID);
+                mPlayerService.unregisterReceiver(this);
+            } catch (Exception ignore) {
+            }
+            mPlayerService.stopForeground(true);
+        }
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        final String action = intent.getAction();
+        LogHelper.d(TAG, "接收到广播发来的Action" + action);
+        switch (action) {
+            case ACTION_PAUSE:
+                mTransportControls.pause();
+                break;
+            case ACTION_PLAY:
+                mTransportControls.play();
+                break;
+            case ACTION_NEXT:
+                mTransportControls.skipToNext();
+                break;
+            case ACTION_PREV:
+                mTransportControls.skipToPrevious();
+                break;
+            default:
+                LogHelper.d(TAG, "为止的广播意图（已忽略）: " + action);
+        }
+    }
+
+    /**
+     * 在SessionToken变化时更新状态
+     * 在运行第一次或Session被销毁时调用
+     *
+     * @throws RemoteException
+     */
     private void updateSessionToken() throws RemoteException {
         MediaSessionCompat.Token freshToken = mPlayerService.getSessionToken();
         if (mSessionToken == null && freshToken != null ||
@@ -99,6 +166,11 @@ public class NotificationManager {
         }
     }
 
+    /**
+     * 创建通知栏
+     *
+     * @return
+     */
     private Notification createNotification() {
         LogHelper.d(TAG, "更新通知栏显示数据，metadata=" + mMetadata);
         if (mMetadata == null || mPlaybackState == null) {
@@ -126,15 +198,84 @@ public class NotificationManager {
 
         MediaDescriptionCompat description = mMetadata.getDescription();
 
-        String fetchArtUrl = null;
         Bitmap art = null;
         if (description.getIconUri() != null) {
-
+            String artUrl = description.getIconUri().toString();
+            art = GlideUtil.getBigImage(mPlayerService, artUrl);
+            if (art == null) {
+                art = BitmapFactory.decodeResource(mPlayerService.getResources(),
+                        R.drawable.ic_default_art);
+            }
         }
-        // TODO: 2017/3/18
+
+        builder
+                .setStyle(new NotificationCompat.MediaStyle()
+                        .setShowActionsInCompactView(playPauseButtonPosition)
+                        .setMediaSession(mSessionToken))
+                .setColor(mNotificationColor)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setUsesChronometer(true)
+                .setContentIntent(createContentIntent(description))
+                .setContentTitle(description.getTitle())
+                .setContentText(description.getSubtitle())
+                .setLargeIcon(art);
+
+        setNotificationPlaybackState(builder);
         return builder.build();
     }
 
+    /**
+     * 设置通知栏播放状态
+     *
+     * @param builder
+     */
+    private void setNotificationPlaybackState(NotificationCompat.Builder builder) {
+        LogHelper.d(TAG, "更新通知栏播放状态， mPlaybackState=" + mPlaybackState);
+        if (mPlaybackState == null || !mStarted) {
+            LogHelper.d(TAG, "更新通知栏播放状态. 取消通知栏!");
+            mPlayerService.stopForeground(true);
+            return;
+        }
+        if (mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING
+                && mPlaybackState.getPosition() >= 0) {
+            LogHelper.d(TAG, "更新通知栏播放状态. updating playback position to ",
+                    (System.currentTimeMillis() - mPlaybackState.getPosition()) / 1000, " seconds");
+            builder
+                    .setWhen(System.currentTimeMillis() - mPlaybackState.getPosition())
+                    .setShowWhen(true)
+                    .setUsesChronometer(true);
+        } else {
+            LogHelper.d(TAG, "更新通知栏播放状态. 隐藏播放的进度");
+            builder
+                    .setWhen(0)
+                    .setShowWhen(false)
+                    .setUsesChronometer(false);
+        }
+        builder.setOngoing(mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING);
+    }
+
+    /**
+     * 获取点击状态栏之后跳转的意图
+     *
+     * @param description
+     * @return
+     */
+    private PendingIntent createContentIntent(MediaDescriptionCompat description) {
+        if (SimplePlayer.getPlayingActivity() == null) return null;
+        Intent openUI = new Intent(mPlayerService, SimplePlayer.getPlayingActivity());
+        openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (description != null)
+            openUI.putExtra(SimplePlayer.EXTRA_CURRENT_MEDIA_DESCRIPTION, description);
+        return PendingIntent.getActivity(mPlayerService, REQUEST_CODE,
+                openUI, PendingIntent.FLAG_CANCEL_CURRENT);
+    }
+
+    /**
+     * 通知栏添加播放或暂停按钮
+     *
+     * @param builder
+     */
     private void addPlayPauseAction(NotificationCompat.Builder builder) {
         LogHelper.d(TAG, "更新 暂停播放按钮");
         String label;
@@ -152,7 +293,9 @@ public class NotificationManager {
         builder.addAction(new android.support.v7.app.NotificationCompat.Action(icon, label, intent));
     }
 
-
+    /**
+     * 播放器控制回调
+     */
     private final MediaControllerCompat.Callback mcb = new MediaControllerCompat.Callback() {
         @Override
         public void onSessionDestroyed() {
@@ -171,9 +314,11 @@ public class NotificationManager {
             LogHelper.d(TAG, "接收到新的播放状态", state);
             if (state.getState() == PlaybackStateCompat.STATE_STOPPED ||
                     state.getState() == PlaybackStateCompat.STATE_NONE) {
-                // TODO: 2017/3/16 停止通知
+                stopNotification();
             } else {
-                // TODO: 2017/3/16 打开通知栏状态
+                Notification notification = createNotification();
+                if (notification != null)
+                    mNotificationManager.notify(NOTIFICATION_ID, notification);
             }
         }
 
@@ -181,8 +326,9 @@ public class NotificationManager {
         public void onMetadataChanged(MediaMetadataCompat metadata) {
             mMetadata = metadata;
             LogHelper.d(TAG, "接收到新播放体", metadata);
-            // TODO: 2017/3/16 打开通知栏状态
+            Notification notification = createNotification();
+            if (notification != null)
+                mNotificationManager.notify(NOTIFICATION_ID, notification);
         }
     };
-
 }

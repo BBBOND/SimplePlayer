@@ -12,8 +12,12 @@ import java.util.List;
 
 public class SimplePlayer {
 
+    public static final String EXTRA_CURRENT_MEDIA_DESCRIPTION = "EXTRA_CURRENT_MEDIA_DESCRIPTION";
+
     private static Context mContext;
     private static List<MediaData> mMediaDataList;
+
+    private static Class mPlayingActivity;
 
     public static void init(Context context) {
         SimplePlayer.mContext = context;
@@ -27,4 +31,11 @@ public class SimplePlayer {
         SimplePlayer.mContext = null;
     }
 
+    public static Class getPlayingActivity() {
+        return mPlayingActivity;
+    }
+
+    public static void setPlayingActivity(Class mPlayingActivity) {
+        SimplePlayer.mPlayingActivity = mPlayingActivity;
+    }
 }
