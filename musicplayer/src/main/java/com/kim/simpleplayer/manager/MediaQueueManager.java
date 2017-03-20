@@ -3,7 +3,9 @@ package com.kim.simpleplayer.manager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
+import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.helper.QueueHelper;
+import com.kim.simpleplayer.model.MediaData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,10 +22,11 @@ public class MediaQueueManager {
     private List<MediaSessionCompat.QueueItem> mPlayingQueue;
     private int mCurrentIndex;
 
-    public MediaQueueManager(MediaDataUpdateListener mMediaDataUpdateListener) {
+    public MediaQueueManager(List<MediaData> mediaDataList,
+                             MediaDataUpdateListener mMediaDataUpdateListener) {
         this.mMediaDataUpdateListener = mMediaDataUpdateListener;
 
-        mPlayingQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
+        mPlayingQueue = QueueHelper.formatMediaData2QueueItem(mediaDataList);
         mCurrentIndex = 0;
     }
 
@@ -49,6 +52,13 @@ public class MediaQueueManager {
         int index = QueueHelper.getIndexOnQueue(mPlayingQueue, mediaId);
         setCurrentIndex(index);
         return index >= 0;
+    }
+
+    /**
+     * 设置随机播放
+     */
+    public void setRandomItem() {
+        setCurrentIndex((int) (Math.random() * mPlayingQueue.size()));
     }
 
     /**
@@ -108,6 +118,7 @@ public class MediaQueueManager {
 
     /**
      * 获取当前队列大小
+     *
      * @return
      */
     public int getCurrentQueueSize() {
@@ -116,6 +127,13 @@ public class MediaQueueManager {
         return mPlayingQueue.size();
     }
 
+    public MediaMetadataCompat getMusic(String musicId) {
+        for (MediaData data : SimplePlayer.getMediaDataList()) {
+            if (data.getMediaId().equals(musicId))
+                return data.getMediaMetadata();
+        }
+        return null;
+    }
 
 
     public interface MediaDataUpdateListener {

@@ -27,6 +27,10 @@ public class SimplePlayer {
         SimplePlayer.mMediaDataList = mediaDataList;
     }
 
+    public static List<MediaData> getMediaDataList() {
+        return mMediaDataList;
+    }
+
     public static void release() {
         SimplePlayer.mContext = null;
     }

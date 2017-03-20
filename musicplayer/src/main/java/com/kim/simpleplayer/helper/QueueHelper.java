@@ -2,6 +2,10 @@ package com.kim.simpleplayer.helper;
 
 import android.support.v4.media.session.MediaSessionCompat;
 
+import com.kim.simpleplayer.model.MediaData;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,5 +27,15 @@ public class QueueHelper {
 
     public static boolean isCurrentPlayable(List<MediaSessionCompat.QueueItem> playingQueue, int index) {
         return (playingQueue != null && index >= 0 && index < playingQueue.size());
+    }
+
+    public static List<MediaSessionCompat.QueueItem> formatMediaData2QueueItem(List<MediaData> mediaDataList) {
+        List<MediaSessionCompat.QueueItem> queueItemList = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
+        if (mediaDataList == null)
+            return queueItemList;
+        for (MediaData mediaData : mediaDataList) {
+            queueItemList.add(new MediaSessionCompat.QueueItem(mediaData.getMediaMetadata().getDescription(), mediaDataList.indexOf(mediaData)));
+        }
+        return queueItemList;
     }
 }
