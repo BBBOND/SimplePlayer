@@ -37,7 +37,6 @@ public class NotificationManager extends BroadcastReceiver {
     public static final String ACTION_PLAY = "com.kim.simpleplayer.play";
     public static final String ACTION_PREV = "com.kim.simpleplayer.prev";
     public static final String ACTION_NEXT = "com.kim.simpleplayer.next";
-    public static final String ACTION_STOP_CASTING = "com.kim.simpleplayer.stop_cast";
 
     private static final int NOTIFICATION_ID = 1994;
     private static final int REQUEST_CODE = 100;
@@ -51,7 +50,6 @@ public class NotificationManager extends BroadcastReceiver {
     private final PendingIntent mPlayIntent;
     private final PendingIntent mPreviousIntent;
     private final PendingIntent mNextIntent;
-    private final PendingIntent mStopCastIntent;
 
     private final NotificationManagerCompat mNotificationManager;
 
@@ -77,9 +75,6 @@ public class NotificationManager extends BroadcastReceiver {
                 new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         mNextIntent = PendingIntent.getBroadcast(playerService, REQUEST_CODE,
                 new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
-        mStopCastIntent = PendingIntent.getBroadcast(playerService, REQUEST_CODE,
-                new Intent(ACTION_STOP_CASTING).setPackage(pkg),
-                PendingIntent.FLAG_CANCEL_CURRENT);
 
         mNotificationManager.cancelAll();
     }
