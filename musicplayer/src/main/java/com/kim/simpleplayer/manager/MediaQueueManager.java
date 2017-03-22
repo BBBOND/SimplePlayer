@@ -1,11 +1,13 @@
 package com.kim.simpleplayer.manager;
 
+import android.content.Context;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.helper.QueueHelper;
 import com.kim.simpleplayer.model.MediaData;
+import com.kim.simpleplayer.utils.GlideUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +52,17 @@ public class MediaQueueManager {
      */
     public boolean setCurrentItem(String mediaId) {
         int index = QueueHelper.getIndexOnQueue(mPlayingQueue, mediaId);
+        setCurrentIndex(index);
+        return index >= 0;
+    }
+
+    /**
+     * 通过QueueId确定当前播放位置
+     * @param queueId
+     * @return
+     */
+    public boolean setCurrentItem(long queueId) {
+        int index = QueueHelper.getIndexOnQueue(mPlayingQueue, queueId);
         setCurrentIndex(index);
         return index >= 0;
     }
@@ -125,6 +138,36 @@ public class MediaQueueManager {
         if (mPlayingQueue == null)
             return 0;
         return mPlayingQueue.size();
+    }
+
+    public void updateMetadata(Context context) {
+        MediaSessionCompat.QueueItem currentMusic = getCurrentMusic();
+        if (currentMusic == null) {
+            mMediaDataUpdateListener.onMediaDataRetrieveError();
+            return;
+        }
+        final String musicId = currentMusic.getDescription().getMediaId();
+        MediaMetadataCompat metadata = getMusic(musicId);
+        if (metadata == null) {
+            throw new IllegalArgumentException("错误的musicId: " + musicId);
+        }
+        mMediaDataUpdateListener.onMediaDataChange(metadata);
+
+        if (metadata.getDescription().getIconBitmap() == null &&
+                metadata.getDescription().getIconUri() != null) {
+            String albumUri = metadata.getDescription().getIconUri().toString();
+            metadata = new MediaMetadataCompat.Builder(metadata)
+                    .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, GlideUtil.getBigImage(context, albumUri))
+                    .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, GlideUtil.getIconImage(context, albumUri))
+                    .build();
+            MediaSessionCompat.QueueItem current = getCurrentMusic();
+            if (current == null)
+                return;
+            String currentPlayingId = current.getDescription().getMediaId();
+            if (musicId.equals(currentPlayingId)) {
+                mMediaDataUpdateListener.onMediaDataChange(metadata);
+            }
+        }
     }
 
     public MediaMetadataCompat getMusic(String musicId) {

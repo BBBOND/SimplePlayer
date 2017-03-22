@@ -2,23 +2,13 @@ package com.kim.simpleplayer.service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.MediaRouter;
 import android.os.IBinder;
-
-import static android.media.MediaPlayer.OnCompletionListener;
-import static android.media.MediaPlayer.OnErrorListener;
-import static android.media.MediaPlayer.OnPreparedListener;
-import static android.media.MediaPlayer.OnSeekCompleteListener;
-
 import android.os.RemoteException;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 
 import com.kim.simpleplayer.SimplePlayer;
-import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.manager.MediaQueueManager;
 import com.kim.simpleplayer.manager.NotificationManager;
 

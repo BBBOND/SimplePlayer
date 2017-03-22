@@ -25,6 +25,17 @@ public class QueueHelper {
         return -1;
     }
 
+    public static int getIndexOnQueue(List<MediaSessionCompat.QueueItem> playingQueue, long queueId) {
+        int index = 0;
+        for (MediaSessionCompat.QueueItem item : playingQueue) {
+            if (queueId == item.getQueueId()) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+
     public static boolean isCurrentPlayable(List<MediaSessionCompat.QueueItem> playingQueue, int index) {
         return (playingQueue != null && index >= 0 && index < playingQueue.size());
     }

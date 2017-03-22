@@ -17,7 +17,7 @@ public class GlideUtil {
     private static final String TAG = GlideUtil.class.getSimpleName();
 
     private static final int MAX_ART_WIDTH = 800;
-    private static final int MAX_ART_HEIGHT = 800;
+    private static final int MAX_ART_HEIGHT = 480;
 
     private static final int MAX_ART_WIDTH_ICON = 128;
     private static final int MAX_ART_HEIGHT_ICON = 128;
