@@ -20,7 +20,7 @@ import com.kim.simpleplayer.service.PlayerService;
 import java.io.IOException;
 
 /**
- * Created by hunyuan on 2017/3/20.
+ * Created by bbbond on 2017/3/20.
  */
 
 public class LocalPlayback implements Playback,
@@ -71,10 +71,10 @@ public class LocalPlayback implements Playback,
     };
 
     public LocalPlayback(Context context, MediaQueueManager mediaQueueManager) {
-        this.mContext = context;
+        this.mContext = context.getApplicationContext();
         this.mMediaQueueManager = mediaQueueManager;
-        this.mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        this.mWifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
+        this.mAudioManager = (AudioManager) context.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        this.mWifiLock = ((WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, "uAmp_lock");
         this.mState = PlaybackStateCompat.STATE_NONE;
     }
@@ -118,11 +118,6 @@ public class LocalPlayback implements Playback,
     @Override
     public int getCurrentStreamPosition() {
         return mMediaPlayer != null ? mMediaPlayer.getCurrentPosition() : mCurrentPosition;
-    }
-
-    @Override
-    public void setCurrentStreamPosition(int pos) {
-        this.mCurrentPosition = pos;
     }
 
     @Override
@@ -178,56 +173,111 @@ public class LocalPlayback implements Playback,
 
     @Override
     public void pause() {
-
+        LogHelper.d(TAG, "暂停");
+        if (mState == PlaybackStateCompat.STATE_PLAYING) {
+            if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                mMediaPlayer.pause();
+                mCurrentPosition = mMediaPlayer.getCurrentPosition();
+            }
+            relaxResources(false);
+        }
+        mState = PlaybackStateCompat.STATE_PAUSED;
+        if (mCallback != null)
+            mCallback.onPlaybackStatusChanged(mState);
+        unregisterAudioNoisyReceiver();
     }
 
     @Override
     public void seekTo(int position) {
-
+        LogHelper.d(TAG, "滑动到: " + position);
+        if (mMediaPlayer == null) {
+            mCurrentPosition = position;
+        } else {
+            if (mMediaPlayer.isPlaying()) {
+                mState = PlaybackStateCompat.STATE_BUFFERING;
+            }
+            registerAudioNoisyReceiver();
+            mMediaPlayer.seekTo(position);
+            if (mCallback != null)
+                mCallback.onPlaybackStatusChanged(mState);
+        }
     }
 
     @Override
     public void setCurrentMediaId(String mediaId) {
-
+        this.mCurrentMediaId = mediaId;
     }
 
     @Override
     public String getCurrentMediaId() {
-        return null;
+        return mCurrentMediaId;
     }
 
     @Override
     public void setCallback(Callback callback) {
-
+        this.mCallback = callback;
     }
 
     @Override
-    public void onAudioFocusChange(int i) {
-
+    public void setCurrentStreamPosition(int pos) {
+        this.mCurrentPosition = pos;
     }
 
     @Override
-    public void onCompletion(MediaPlayer mediaPlayer) {
+    public void onAudioFocusChange(int focusChange) {
+        LogHelper.d(TAG, "焦点改变: " + focusChange);
+        if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+            mAudioFocus = AUDIO_FOCUSED;
+        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS ||
+                focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
+                focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+            boolean canDuck = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
+            mAudioFocus = canDuck ? AUDIO_NO_FOCUS_NO_DUCK : AUDIO_NO_FOCUS_CAN_DUCK;
 
-    }
-
-    @Override
-    public boolean onError(MediaPlayer mediaPlayer, int i, int i1) {
-        return false;
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mediaPlayer) {
-
+            if (mState == PlaybackStateCompat.STATE_PLAYING && !canDuck)
+                mPlayOnFocusGain = true;
+        } else {
+            LogHelper.d(TAG, "忽略不支持的焦点变化类型: " + focusChange);
+        }
+        configMediaPlayerState();
     }
 
     @Override
     public void onSeekComplete(MediaPlayer mediaPlayer) {
+        LogHelper.d(TAG, "移动进度条完成: " + mediaPlayer.getCurrentPosition());
+        mCurrentPosition = mediaPlayer.getCurrentPosition();
+        if (mState == PlaybackStateCompat.STATE_BUFFERING) {
+            registerAudioNoisyReceiver();
+            mMediaPlayer.start();
+            mState = PlaybackStateCompat.STATE_PLAYING;
+        }
+        if (mCallback != null)
+            mCallback.onPlaybackStatusChanged(mState);
+    }
 
+    @Override
+    public void onCompletion(MediaPlayer mediaPlayer) {
+        LogHelper.d(TAG, "MediaPlayer播放完成！");
+        if (mCallback != null)
+            mCallback.onCompletion();
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mediaPlayer) {
+        LogHelper.d(TAG, "MediaPlayer准备完成！");
+        configMediaPlayerState();
+    }
+
+    @Override
+    public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
+        LogHelper.d(TAG, "播放发生异常: what: " + what + ", extra: " + extra);
+        if (mCallback != null)
+            mCallback.onError("MediaPlayer error " + what + " (" + extra + ")");
+        return true;
     }
 
     private void tryToGetAudioFocus() {
-        LogHelper.d(TAG, "tryToGetAudioFocus");
+        LogHelper.d(TAG, "尝试获取焦点");
         int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN);
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
@@ -261,40 +311,39 @@ public class LocalPlayback implements Playback,
     private void relaxResources(boolean releaseMediaPlayer) {
         LogHelper.d(TAG, "释放资源. 是否释放播放器资源=", releaseMediaPlayer);
 
-        // stop and release the Media Player, if it's available
+        // 如果MediaPlayer不为空，停止并释放
         if (releaseMediaPlayer && mMediaPlayer != null) {
             mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
 
-        // we can also release the Wifi lock, if we're holding it
+        // 如果持有wifi锁，释放他
         if (mWifiLock.isHeld()) {
             mWifiLock.release();
         }
     }
 
     private void configMediaPlayerState() {
-        LogHelper.d(TAG, "configMediaPlayerState. mAudioFocus=", mAudioFocus);
+        LogHelper.d(TAG, "配置播放器状态. mAudioFocus=", mAudioFocus);
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
-            // If we don't have audio focus and can't duck, we have to pause,
+            // 如果没有焦点也不允许duck，必须暂停
             if (mState == PlaybackStateCompat.STATE_PLAYING) {
                 pause();
             }
-        } else {  // we have audio focus:
+        } else {  // 有焦点
             registerAudioNoisyReceiver();
             if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
-                mMediaPlayer.setVolume(VOLUME_DUCK, VOLUME_DUCK); // we'll be relatively quiet
+                mMediaPlayer.setVolume(VOLUME_DUCK, VOLUME_DUCK); // 降低音量
             } else {
                 if (mMediaPlayer != null) {
-                    mMediaPlayer.setVolume(VOLUME_NORMAL, VOLUME_NORMAL); // we can be loud again
-                } // else do something for remote client.
+                    mMediaPlayer.setVolume(VOLUME_NORMAL, VOLUME_NORMAL); // 音量复原
+                }
             }
-            // If we were playing when we lost focus, we need to resume playing.
+            // 如果在失去焦点时是播放状态，需要继续播放
             if (mPlayOnFocusGain) {
                 if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
-                    LogHelper.d(TAG, "configMediaPlayerState startMediaPlayer. seeking to ",
-                            mCurrentPosition);
+                    LogHelper.d(TAG, "开始播放: " + mCurrentPosition);
                     if (mCurrentPosition == mMediaPlayer.getCurrentPosition()) {
                         mMediaPlayer.start();
                         mState = PlaybackStateCompat.STATE_PLAYING;
@@ -312,18 +361,15 @@ public class LocalPlayback implements Playback,
     }
 
     private void createMediaPlayerIfNeeded() {
-        LogHelper.d(TAG, "createMediaPlayerIfNeeded. needed? ", (mMediaPlayer == null));
+        LogHelper.d(TAG, "按需创建播放器. needed? ", (mMediaPlayer == null));
         if (mMediaPlayer == null) {
             mMediaPlayer = new MediaPlayer();
 
-            // Make sure the media player will acquire a wake-lock while
-            // playing. If we don't do that, the CPU might go to sleep while the
-            // song is playing, causing playback to stop.
+            // 确保播放器在播放时持有休眠锁(wake-lock)。
+            // 如果不这样，在播放时CPU可能会进入休眠状态，导致回调停止。
             mMediaPlayer.setWakeMode(mContext.getApplicationContext(),
                     PowerManager.PARTIAL_WAKE_LOCK);
 
-            // we want the media player to notify us when it's ready preparing,
-            // and when it's done playing:
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setOnErrorListener(this);
