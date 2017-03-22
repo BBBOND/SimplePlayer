@@ -17,6 +17,9 @@ public class MediaData implements MediaDataSourceI {
     long duration, numTracks, btFolderType;
     float rating, userRating;
 
+    public MediaData() {
+    }
+
     public MediaData(Bundle bundle) {
         // *id
         mediaId = bundle.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);

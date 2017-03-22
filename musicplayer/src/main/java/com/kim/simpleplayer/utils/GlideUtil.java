@@ -2,10 +2,8 @@ package com.kim.simpleplayer.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 import com.bumptech.glide.Glide;
-import com.kim.simpleplayer.R;
 import com.kim.simpleplayer.helper.LogHelper;
 
 /**

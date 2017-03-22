@@ -257,8 +257,8 @@ public class NotificationManager extends BroadcastReceiver {
      * @return
      */
     private PendingIntent createContentIntent(MediaDescriptionCompat description) {
-        if (SimplePlayer.getPlayingActivity() == null) return null;
-        Intent openUI = new Intent(mPlayerService, SimplePlayer.getPlayingActivity());
+        if (SimplePlayer.getInstance().getPlayingActivity() == null) return null;
+        Intent openUI = new Intent(mPlayerService, SimplePlayer.getInstance().getPlayingActivity());
         openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         if (description != null)
             openUI.putExtra(SimplePlayer.EXTRA_CURRENT_MEDIA_DESCRIPTION, description);

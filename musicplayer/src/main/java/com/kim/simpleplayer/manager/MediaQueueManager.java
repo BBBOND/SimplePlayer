@@ -9,8 +9,6 @@ import com.kim.simpleplayer.helper.QueueHelper;
 import com.kim.simpleplayer.model.MediaData;
 import com.kim.simpleplayer.utils.GlideUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
