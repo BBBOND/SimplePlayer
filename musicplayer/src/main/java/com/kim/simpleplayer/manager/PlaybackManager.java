@@ -26,13 +26,13 @@ public class PlaybackManager implements Playback.Callback {
     public PlaybackManager(Context context,
                            MediaQueueManager mediaQueueManager,
                            Playback playback,
-                           PlaybackServiceCallback serviceCallback,
-                           MediaSessionCallback mediaSessionCallback) {
+                           PlaybackServiceCallback serviceCallback) {
         this.mContext = context;
         this.mMediaQueueManager = mediaQueueManager;
         this.mPlayback = playback;
         this.mServiceCallback = serviceCallback;
-        this.mMediaSessionCallback = mediaSessionCallback;
+        this.mMediaSessionCallback = new MediaSessionCallback();
+        this.mPlayback.setCallback(this);
     }
 
     @Override
@@ -122,7 +122,6 @@ public class PlaybackManager implements Playback.Callback {
             mServiceCallback.onNotificationRequired();
         }
     }
-
 
     private long getAvailableActions() {
         long actions =

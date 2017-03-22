@@ -171,7 +171,7 @@ public class MediaQueueManager {
     }
 
     public MediaMetadataCompat getMusic(String musicId) {
-        for (MediaData data : SimplePlayer.getMediaDataList()) {
+        for (MediaData data : SimplePlayer.getInstance().getMediaDataList()) {
             if (data.getMediaId().equals(musicId))
                 return data.getMediaMetadata();
         }
