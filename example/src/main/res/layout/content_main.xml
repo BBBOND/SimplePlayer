@@ -24,6 +24,5 @@
         android:layout_above="@+id/button"
         android:layout_centerHorizontal="true"
         android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Name" />
+        android:inputType="textPersonName" />
 </RelativeLayout>

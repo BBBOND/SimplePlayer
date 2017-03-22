@@ -33,12 +33,8 @@ public class MainActivity extends AppCompatActivity implements
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
-            String url = mEditText.getText().toString();
-            if (url.startsWith("file://")) {
-                mMediaPlayer.setDataSource(this, Uri.fromFile(new File(url)));
-            } else {
-                mMediaPlayer.setDataSource(url);
-            }
+            String url = mEditText.getText().toString(); //适用于 文件路径或网络路径
+            mMediaPlayer.setDataSource(url);
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.prepareAsync();
         } catch (IOException e) {

@@ -161,10 +161,9 @@ public class LocalPlayback implements Playback,
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 mMediaPlayer.setDataSource(source);
 
-                // TODO: 2017/3/20 判断本地和远端源
-
                 mMediaPlayer.prepareAsync();
-                mWifiLock.acquire();
+                if (source != null && source.startsWith("http"))
+                    mWifiLock.acquire();
 
                 if (mCallback != null) {
                     mCallback.onPlaybackStatusChanged(mState);
