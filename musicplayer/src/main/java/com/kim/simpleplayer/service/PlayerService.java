@@ -2,6 +2,7 @@ package com.kim.simpleplayer.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.media.session.MediaSession;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -38,37 +39,37 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
 
     private MediaSessionCompat mMediaSessionCompat;
     private NotificationManager mNotificationManager;
-    private MediaQueueManager mMediaQueueManager;
 
     @Override
     public void onCreate() {
         super.onCreate();
         if (SimplePlayer.getInstance().getMediaDataList() == null) return;
-        mMediaQueueManager = new MediaQueueManager(SimplePlayer.getInstance().getMediaDataList(), new MediaQueueManager.MediaDataUpdateListener() {
-            @Override
-            public void onMediaDataChange(MediaMetadataCompat metadata) {
-                mMediaSessionCompat.setMetadata(metadata);
-            }
+        MediaQueueManager mediaQueueManager = new MediaQueueManager(SimplePlayer.getInstance().getMediaDataList(),
+                new MediaQueueManager.MediaDataUpdateListener() {
+                    @Override
+                    public void onMediaDataChange(MediaMetadataCompat metadata) {
+                        mMediaSessionCompat.setMetadata(metadata);
+                    }
 
-            @Override
-            public void onMediaDataRetrieveError() {
-                mPlaybackManager.updatePlaybackState("无法取到媒体数据");
-            }
+                    @Override
+                    public void onMediaDataRetrieveError() {
+                        mPlaybackManager.updatePlaybackState("无法取到媒体数据");
+                    }
 
-            @Override
-            public void onCurrentQueueIndexUpdated(int queueIndex) {
-                mPlaybackManager.handlePlayRequest();
-            }
+                    @Override
+                    public void onCurrentQueueIndexUpdated(int queueIndex) {
+                        mPlaybackManager.handlePlayRequest();
+                    }
 
-            @Override
-            public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
-                mMediaSessionCompat.setQueue(newQueue);
-                mMediaSessionCompat.setQueueTitle(title);
-            }
-        });
+                    @Override
+                    public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
+                        mMediaSessionCompat.setQueue(newQueue);
+                        mMediaSessionCompat.setQueueTitle(title);
+                    }
+                });
 
-        LocalPlayback playback = new LocalPlayback(this, mMediaQueueManager);
-        mPlaybackManager = new PlaybackManager(this, mMediaQueueManager, playback, this);
+        LocalPlayback playback = new LocalPlayback(this, mediaQueueManager);
+        mPlaybackManager = new PlaybackManager(this, mediaQueueManager, playback, this);
 
 
         mMediaSessionCompat = new MediaSessionCompat(this, TAG);
@@ -121,6 +122,13 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
             return mMediaSessionCompat.getSessionToken();
         else
             return null;
+    }
+
+    public int getState() {
+        if (mPlaybackManager != null && mPlaybackManager.getPlayback() != null)
+            return mPlaybackManager.getPlayback().getState();
+        else
+            return -1;
     }
 
     @Override

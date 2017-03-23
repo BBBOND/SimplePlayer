@@ -76,6 +76,7 @@ public class PlaybackManager implements Playback.Callback {
             mServiceCallback.onPlaybackStart();
             mPlayback.play(currentMusic);
         }
+        updatePlaybackState(null);
     }
 
     public void handlePauseRequest() {
@@ -166,6 +167,7 @@ public class PlaybackManager implements Playback.Callback {
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             LogHelper.d(TAG, "通过MediaId播放 mediaId:", mediaId, "  extras=", extras);
             mMediaQueueManager.setCurrentItem(mediaId);
+            mMediaQueueManager.updateMetadata(mContext);
             handlePlayRequest();
         }
 

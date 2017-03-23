@@ -145,7 +145,7 @@ public class LocalPlayback implements Playback,
             MediaMetadataCompat track = mMediaQueueManager.getMusic(item.getDescription().getMediaId());
 
             String source = track.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI);
-            if (source != null) {
+            if (source != null && source.startsWith("http")) {
                 source = source.replaceAll(" ", "%20");
             }
             try {

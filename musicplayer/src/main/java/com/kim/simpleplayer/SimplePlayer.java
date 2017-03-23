@@ -28,6 +28,7 @@ public class SimplePlayer {
     private MediaSessionCompat.Token mSessionToken;
     private MediaControllerCompat mMediaController;
     private MediaControllerCompat.TransportControls mTransportControls;
+    private MediaControllerCompat.Callback mcb;
 
     private PlayerService mPlayerService;
     private boolean bound = false;
@@ -45,6 +46,15 @@ public class SimplePlayer {
         return mInstance;
     }
 
+    private SimplePlayer() {
+    }
+
+    public void setMediaControllerCallback(MediaControllerCompat.Callback callback) {
+        this.mcb = callback;
+        if (mMediaController != null && mcb != null)
+            mMediaController.registerCallback(mcb);
+    }
+
     public void setMediaDataList(List<MediaData> mediaDataList) {
         mMediaDataList = mediaDataList;
     }
@@ -54,7 +64,7 @@ public class SimplePlayer {
     }
 
     public void getTransportControls(final Context context, final GetTransportControlsCallback callback) {
-        connectServiceIfNeed(context, new ConnectCallback() {
+        connectServiceIfNeed(context.getApplicationContext(), new ConnectCallback() {
             @Override
             public void onConnected() {
                 try {
@@ -75,13 +85,33 @@ public class SimplePlayer {
         });
     }
 
+    public void getState(Context context, final GetStateCallback callback) {
+        connectServiceIfNeed(context.getApplicationContext(), new ConnectCallback() {
+            @Override
+            public void onConnected() {
+                if (callback != null && mPlayerService != null)
+                    callback.success(mPlayerService.getState());
+            }
+
+            @Override
+            public void onDisconnected() {
+                if (callback != null)
+                    callback.error("无法连接");
+            }
+        });
+    }
+
     private void updateSessionToken(Context context) throws RemoteException {
         MediaSessionCompat.Token refreshToken = mPlayerService.getSessionToken();
         if (mSessionToken == null && refreshToken != null ||
                 mSessionToken != null && !mSessionToken.equals(refreshToken)) {
             mSessionToken = refreshToken;
+            if (mMediaController != null && mcb != null)
+                mMediaController.unregisterCallback(mcb);
             if (mSessionToken != null) {
-                mMediaController = new MediaControllerCompat(context, mSessionToken);
+                mMediaController = new MediaControllerCompat(context.getApplicationContext(), mSessionToken);
+                if (mcb != null)
+                    mMediaController.registerCallback(mcb);
                 mTransportControls = mMediaController.getTransportControls();
             }
         }
@@ -124,6 +154,11 @@ public class SimplePlayer {
         return mPlayingActivity;
     }
 
+    public void release() {
+        if (mMediaController != null && mcb != null)
+            mMediaController.unregisterCallback(mcb);
+    }
+
     private interface ConnectCallback {
         void onConnected();
 
@@ -132,6 +167,12 @@ public class SimplePlayer {
 
     public interface GetTransportControlsCallback {
         void success(MediaControllerCompat.TransportControls transportControls);
+
+        void error(String errorMsg);
+    }
+
+    public interface GetStateCallback {
+        void success(int state);
 
         void error(String errorMsg);
     }

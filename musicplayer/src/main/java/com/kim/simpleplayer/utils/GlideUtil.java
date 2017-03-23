@@ -22,7 +22,7 @@ public class GlideUtil {
 
     public static Bitmap getBigImage(Context context, String artUrl) {
         try {
-            return Glide.with(context).load(artUrl).asBitmap().centerCrop().into(MAX_ART_WIDTH, MAX_ART_HEIGHT).get();
+            return Glide.with(context.getApplicationContext()).load(artUrl).asBitmap().centerCrop().into(MAX_ART_WIDTH, MAX_ART_HEIGHT).get();
         } catch (Exception e) {
             LogHelper.e(TAG, e, "图片载入时出错: " + artUrl);
             return null;
@@ -31,7 +31,7 @@ public class GlideUtil {
 
     public static Bitmap getIconImage(Context context, String artUrl) {
         try {
-            return Glide.with(context).load(artUrl).asBitmap().centerCrop().into(MAX_ART_WIDTH_ICON, MAX_ART_HEIGHT_ICON).get();
+            return Glide.with(context.getApplicationContext()).load(artUrl).asBitmap().centerCrop().into(MAX_ART_WIDTH_ICON, MAX_ART_HEIGHT_ICON).get();
         } catch (Exception e) {
             LogHelper.e(TAG, e, "图片载入时出错: " + artUrl);
             return null;
