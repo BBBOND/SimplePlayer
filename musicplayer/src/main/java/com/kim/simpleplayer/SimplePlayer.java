@@ -53,15 +53,26 @@ public class SimplePlayer {
         SimplePlayer.mPlayingActivity = mPlayingActivity;
     }
 
-    public MediaControllerCompat.TransportControls getTransportControls(Context context) {
-        try {
-            connectServiceIfNeed(context);
-            updateSessionToken(context);
-            return mTransportControls;
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public void getTransportControls(final Context context, final GetTransportControlsCallback callback) {
+        connectServiceIfNeed(context, new ConnectCallback() {
+            @Override
+            public void onConnected() {
+                try {
+                    updateSessionToken(context);
+                    if (callback != null)
+                        callback.success(mTransportControls);
+                } catch (RemoteException e) {
+                    if (callback != null)
+                        callback.error(e.getMessage());
+                }
+            }
+
+            @Override
+            public void onDisconnected() {
+                if (callback != null)
+                    callback.error("无法连接");
+            }
+        });
     }
 
     private void updateSessionToken(Context context) throws RemoteException {
@@ -76,10 +87,32 @@ public class SimplePlayer {
         }
     }
 
-    private void connectServiceIfNeed(Context context) {
+    private void connectServiceIfNeed(Context context, final ConnectCallback callback) {
         if (!bound && context != null) {
             Intent intent = new Intent(context.getApplicationContext(), PlayerService.class);
-            context.getApplicationContext().bindService(intent, connection, Context.BIND_AUTO_CREATE);
+            context.getApplicationContext().bindService(intent, new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+                    PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) iBinder;
+                    mPlayerService = binder.getService();
+                    bound = true;
+                    if (callback != null)
+                        callback.onConnected();
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName componentName) {
+                    bound = false;
+                    if (callback != null)
+                        callback.onDisconnected();
+                }
+            }, Context.BIND_AUTO_CREATE);
+        } else if (bound) {
+            if (callback != null)
+                callback.onConnected();
+        } else {
+            if (callback != null)
+                callback.onDisconnected();
         }
     }
 
@@ -91,17 +124,15 @@ public class SimplePlayer {
         return mPlayingActivity;
     }
 
-    private ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) iBinder;
-            mPlayerService = binder.getService();
-            bound = true;
-        }
+    private interface ConnectCallback {
+        void onConnected();
 
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            bound = false;
-        }
-    };
+        void onDisconnected();
+    }
+
+    public interface GetTransportControlsCallback {
+        void success(MediaControllerCompat.TransportControls transportControls);
+
+        void error(String errorMsg);
+    }
 }

@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.model.MediaData;
@@ -40,11 +41,38 @@ public class MainActivity extends AppCompatActivity {
             List<MediaData> mediaDatas = new ArrayList<>();
             mediaDatas.add(md);
             SimplePlayer.getInstance().setMediaDataList(mediaDatas);
-            MediaControllerCompat.TransportControls transportControls = SimplePlayer.getInstance().getTransportControls(this);
-            if (transportControls != null)
-                transportControls.playFromMediaId("123", null);
+            SimplePlayer.getInstance().getTransportControls(this, new SimplePlayer.GetTransportControlsCallback() {
+                @Override
+                public void success(MediaControllerCompat.TransportControls transportControls) {
+                    if (transportControls != null)
+                        transportControls.playFromMediaId("123", null);
+                }
+
+                @Override
+                public void error(String errorMsg) {
+                    Toast.makeText(MainActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
+            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SimplePlayer.getInstance().getTransportControls(this, new SimplePlayer.GetTransportControlsCallback() {
+            @Override
+            public void success(MediaControllerCompat.TransportControls transportControls) {
+                transportControls.stop();
+            }
+
+            @Override
+            public void error(String errorMsg) {
+
+            }
+        });
     }
 }

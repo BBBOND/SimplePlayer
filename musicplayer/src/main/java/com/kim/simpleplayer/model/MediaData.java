@@ -13,8 +13,8 @@ public class MediaData implements MediaDataSourceI {
 
     String mediaId, mediaUri, title, displayTitle, displaySubtitle, displayDescription,
             artUri, displayIconUri, album, albumArtist, albumArtUri, artist, author,
-            writer, composer, compilation, date, year, discNumber, genre, trackNumber;
-    long duration, numTracks, btFolderType;
+            writer, composer, compilation, date, genre;
+    long duration, numTracks, btFolderType, trackNumber, discNumber, year;
     float rating, userRating;
 
     public MediaData() {
@@ -61,15 +61,15 @@ public class MediaData implements MediaDataSourceI {
         // media的创建或发布时间
         date = bundle.getString(MediaMetadataCompat.METADATA_KEY_DATE);
         // media创建或发布的时长
-        year = bundle.getString(MediaMetadataCompat.METADATA_KEY_YEAR);
+        year = bundle.getLong(MediaMetadataCompat.METADATA_KEY_YEAR);
         // 光盘号
-        discNumber = bundle.getString(MediaMetadataCompat.METADATA_KEY_DISC_NUMBER);
+        discNumber = bundle.getLong(MediaMetadataCompat.METADATA_KEY_DISC_NUMBER);
         // 类型，流派
         genre = bundle.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
         // 媒体的原始来源中的曲目数
         numTracks = bundle.getLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS);
         // 曲目编号
-        trackNumber = bundle.getString(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER);
+        trackNumber = bundle.getLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER);
         // 媒体的总体评级
         rating = bundle.getFloat(MediaMetadataCompat.METADATA_KEY_RATING);
         // 用户评级
@@ -95,10 +95,10 @@ public class MediaData implements MediaDataSourceI {
                 .putString(MediaMetadataCompat.METADATA_KEY_COMPOSER, composer)
                 .putString(MediaMetadataCompat.METADATA_KEY_COMPILATION, compilation)
                 .putString(MediaMetadataCompat.METADATA_KEY_DATE, date)
-                .putString(MediaMetadataCompat.METADATA_KEY_YEAR, year)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISC_NUMBER, discNumber)
+                .putLong(MediaMetadataCompat.METADATA_KEY_YEAR, year)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DISC_NUMBER, discNumber)
                 .putString(MediaMetadataCompat.METADATA_KEY_GENRE, genre)
-                .putString(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, trackNumber)
+                .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, trackNumber)
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
                 .putLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS, numTracks)
                 .putLong(MediaMetadataCompat.METADATA_KEY_BT_FOLDER_TYPE, btFolderType)
@@ -243,19 +243,19 @@ public class MediaData implements MediaDataSourceI {
         this.date = date;
     }
 
-    public String getYear() {
+    public long getYear() {
         return year;
     }
 
-    public void setYear(String year) {
+    public void setYear(long year) {
         this.year = year;
     }
 
-    public String getDiscNumber() {
+    public long getDiscNumber() {
         return discNumber;
     }
 
-    public void setDiscNumber(String discNumber) {
+    public void setDiscNumber(long discNumber) {
         this.discNumber = discNumber;
     }
 
@@ -267,11 +267,11 @@ public class MediaData implements MediaDataSourceI {
         this.genre = genre;
     }
 
-    public String getTrackNumber() {
+    public long getTrackNumber() {
         return trackNumber;
     }
 
-    public void setTrackNumber(String trackNumber) {
+    public void setTrackNumber(long trackNumber) {
         this.trackNumber = trackNumber;
     }
 
