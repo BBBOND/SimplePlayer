@@ -15,6 +15,7 @@ import com.kim.simpleplayer.service.PlayerService;
 import java.util.List;
 
 /**
+ * 简易播放器SDK
  * Created by kim on 2017/2/14.
  */
 
@@ -31,7 +32,6 @@ public class SimplePlayer {
     private MediaControllerCompat.Callback mcb;
 
     private PlayerService mPlayerService;
-    private boolean bound = false;
 
     private static Class mPlayingActivity;
 
@@ -85,20 +85,11 @@ public class SimplePlayer {
         });
     }
 
-    public void getState(Context context, final GetStateCallback callback) {
-        connectServiceIfNeed(context.getApplicationContext(), new ConnectCallback() {
-            @Override
-            public void onConnected() {
-                if (callback != null && mPlayerService != null)
-                    callback.success(mPlayerService.getState());
-            }
-
-            @Override
-            public void onDisconnected() {
-                if (callback != null)
-                    callback.error("无法连接");
-            }
-        });
+    public int getState() {
+        if (mPlayerService != null)
+            return mPlayerService.getState();
+        else
+            return -2;
     }
 
     private void updateSessionToken(Context context) throws RemoteException {
@@ -118,26 +109,25 @@ public class SimplePlayer {
     }
 
     private void connectServiceIfNeed(Context context, final ConnectCallback callback) {
-        if (!bound && context != null) {
+        if (mPlayerService == null && context != null) {
             Intent intent = new Intent(context.getApplicationContext(), PlayerService.class);
             context.getApplicationContext().bindService(intent, new ServiceConnection() {
                 @Override
                 public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
                     PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) iBinder;
                     mPlayerService = binder.getService();
-                    bound = true;
                     if (callback != null)
                         callback.onConnected();
                 }
 
                 @Override
                 public void onServiceDisconnected(ComponentName componentName) {
-                    bound = false;
+                    mPlayerService = null;
                     if (callback != null)
                         callback.onDisconnected();
                 }
             }, Context.BIND_AUTO_CREATE);
-        } else if (bound) {
+        } else if (mPlayerService != null) {
             if (callback != null)
                 callback.onConnected();
         } else {
@@ -167,12 +157,6 @@ public class SimplePlayer {
 
     public interface GetTransportControlsCallback {
         void success(MediaControllerCompat.TransportControls transportControls);
-
-        void error(String errorMsg);
-    }
-
-    public interface GetStateCallback {
-        void success(int state);
 
         void error(String errorMsg);
     }
