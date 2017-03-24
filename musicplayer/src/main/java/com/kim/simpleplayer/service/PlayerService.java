@@ -166,7 +166,11 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
         @Override
         public void handleMessage(Message msg) {
             PlayerService service = mWeakReference.get();
-            if (service != null && service.mPlaybackManager.getPlayback() != null) {
+            if (service == null) {
+                return;
+            } else if (service.mPlaybackManager == null || service.mPlaybackManager.getPlayback() == null) {
+                service.stopSelf();
+            } else {
                 if (service.mPlaybackManager.getPlayback().isPlaying()) {
                     LogHelper.d(TAG, "Ignoring delayed stop since the media player is in use.");
                     return;
