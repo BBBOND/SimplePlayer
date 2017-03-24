@@ -106,10 +106,13 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
     @Override
     public void onDestroy() {
         LogHelper.d(TAG, "onDestroy");
-        mPlaybackManager.handleStopRequest(null);
-        mNotificationManager.stopNotification();
+        if (mPlaybackManager != null)
+            mPlaybackManager.handleStopRequest(null);
+        if (mNotificationManager != null)
+            mNotificationManager.stopNotification();
         mDelayedStopHandler.removeCallbacksAndMessages(null);
-        mMediaSessionCompat.release();
+        if (mMediaSessionCompat != null)
+            mMediaSessionCompat.release();
     }
 
     @Override

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
@@ -90,6 +91,12 @@ public class SimplePlayer {
             return mPlayerService.getState();
         else
             return -2;
+    }
+
+    public String getMediaUri() {
+        if (mMediaController != null && mMediaController.getMetadata() != null)
+            return mMediaController.getMetadata().getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI);
+        return null;
     }
 
     private void updateSessionToken(Context context) throws RemoteException {

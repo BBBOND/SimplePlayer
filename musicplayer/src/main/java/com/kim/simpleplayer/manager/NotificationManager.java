@@ -23,7 +23,7 @@ import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.helper.ResourceHelper;
 import com.kim.simpleplayer.service.PlayerService;
-import com.kim.simpleplayer.utils.GlideUtil;
+import com.kim.simpleplayer.utils.ImageCacheUtil;
 
 /**
  * Created by Weya on 2017/3/8.
@@ -193,11 +193,13 @@ public class NotificationManager extends BroadcastReceiver {
 
         MediaDescriptionCompat description = mMetadata.getDescription();
 
+        String fetchArtUrl = null;
         Bitmap art = null;
         if (description.getIconUri() != null) {
             String artUrl = description.getIconUri().toString();
-            art = GlideUtil.getBigImage(mPlayerService, artUrl);
+            art = ImageCacheUtil.getInstance().getBigImage(artUrl);
             if (art == null) {
+                fetchArtUrl = artUrl;
                 art = BitmapFactory.decodeResource(mPlayerService.getResources(),
                         R.drawable.ic_default_art);
             }
@@ -217,6 +219,9 @@ public class NotificationManager extends BroadcastReceiver {
                 .setLargeIcon(art);
 
         setNotificationPlaybackState(builder);
+        if (fetchArtUrl != null) {
+            fetchBitmapFromURLAsync(fetchArtUrl, builder);
+        }
         return builder.build();
     }
 
@@ -286,6 +291,26 @@ public class NotificationManager extends BroadcastReceiver {
             intent = mPlayIntent;
         }
         builder.addAction(new android.support.v7.app.NotificationCompat.Action(icon, label, intent));
+    }
+
+    /**
+     * 异步获取图片
+     *
+     * @param fetchArtUrl
+     * @param builder
+     */
+    private void fetchBitmapFromURLAsync(String fetchArtUrl, final NotificationCompat.Builder builder) {
+        ImageCacheUtil.getInstance().fetch(fetchArtUrl, new ImageCacheUtil.FetchListener() {
+            @Override
+            public void onFetched(String imageUrl, Bitmap bigImage, Bitmap iconImage) {
+                if (mMetadata != null && mMetadata.getDescription().getIconUri() != null &&
+                        mMetadata.getDescription().getIconUri().toString().equals(imageUrl)) {
+                    LogHelper.d(TAG, "获取bitmap, url: ", imageUrl);
+                    builder.setLargeIcon(bigImage);
+                    mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+                }
+            }
+        });
     }
 
     /**

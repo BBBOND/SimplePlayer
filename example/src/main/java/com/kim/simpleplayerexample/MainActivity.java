@@ -42,9 +42,6 @@ public class MainActivity extends AppCompatActivity {
         next = (Button) findViewById(R.id.button_next);
         play = (Button) findViewById(R.id.button_play);
 
-        String path = "/storage/emulated/0/Download/1.mp3";
-        mEditText.setText(path);
-
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         } else {
@@ -103,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        String path = "/storage/emulated/0/Download/1.mp3";
+        mEditText.setText(SimplePlayer.getInstance().getMediaUri() == null ? path : SimplePlayer.getInstance().getMediaUri());
         switch (SimplePlayer.getInstance().getState()) {
             case PlaybackStateCompat.STATE_PAUSED:
                 playState = 1;
