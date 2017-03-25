@@ -1,6 +1,7 @@
 package com.kim.simpleplayer.service;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.media.session.MediaSession;
 import android.os.Binder;
@@ -72,7 +73,8 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
         mPlaybackManager = new PlaybackManager(this, mediaQueueManager, playback, this);
 
 
-        mMediaSessionCompat = new MediaSessionCompat(this, TAG);
+        String pkg = this.getPackageName();
+        mMediaSessionCompat = new MediaSessionCompat(this, TAG, new ComponentName(pkg, TAG), null);
         mMediaSessionCompat.setCallback(mPlaybackManager.getMediaSessionCallback());
         mMediaSessionCompat.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);

@@ -50,12 +50,17 @@ public class SimplePlayer {
     private SimplePlayer() {
     }
 
-    public void setMediaControllerCallback(MediaControllerCompat.Callback callback) {
+    public void registerMediaControllerCallback(MediaControllerCompat.Callback callback) {
         this.mcb = callback;
         if (mMediaController != null && mcb != null)
             mMediaController.registerCallback(mcb);
     }
 
+    public void unregisterMediaControllerCallback() {
+        if (mMediaController != null && mcb != null)
+            mMediaController.unregisterCallback(mcb);
+        this.mcb = null;
+    }
     public void setMediaDataList(List<MediaData> mediaDataList) {
         mMediaDataList = mediaDataList;
     }

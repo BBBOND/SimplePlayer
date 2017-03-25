@@ -1,5 +1,6 @@
 package com.kim.simpleplayer.model;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.RatingCompat;
@@ -70,15 +71,11 @@ public class MediaData implements MediaDataSourceI {
         numTracks = bundle.getLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS);
         // 曲目编号
         trackNumber = bundle.getLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER);
-        // 媒体的总体评级
-        rating = bundle.getFloat(MediaMetadataCompat.METADATA_KEY_RATING);
-        // 用户评级
-        userRating = bundle.getFloat(MediaMetadataCompat.METADATA_KEY_USER_RATING);
     }
 
     @Override
     public MediaMetadataCompat getMediaMetadata() {
-        return new MediaMetadataCompat.Builder()
+        MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, mediaId)
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, mediaUri)
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
@@ -101,10 +98,13 @@ public class MediaData implements MediaDataSourceI {
                 .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, trackNumber)
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
                 .putLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS, numTracks)
-                .putLong(MediaMetadataCompat.METADATA_KEY_BT_FOLDER_TYPE, btFolderType)
-                .putRating(MediaMetadataCompat.METADATA_KEY_RATING, RatingCompat.newStarRating(RatingCompat.RATING_5_STARS, rating))
-                .putRating(MediaMetadataCompat.METADATA_KEY_USER_RATING, RatingCompat.newStarRating(RatingCompat.RATING_5_STARS, userRating))
-                .build();
+                .putLong(MediaMetadataCompat.METADATA_KEY_BT_FOLDER_TYPE, btFolderType);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.putRating(MediaMetadataCompat.METADATA_KEY_RATING, RatingCompat.newStarRating(RatingCompat.RATING_5_STARS, rating))
+                    .putRating(MediaMetadataCompat.METADATA_KEY_USER_RATING, RatingCompat.newStarRating(RatingCompat.RATING_5_STARS, userRating));
+        }
+
+        return builder.build();
     }
 
     public String getAuthor() {

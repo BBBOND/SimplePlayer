@@ -48,7 +48,15 @@ public class MainActivity extends AppCompatActivity {
             play.setEnabled(true);
         }
 
-        SimplePlayer.getInstance().setMediaControllerCallback(new MediaControllerCompat.Callback() {
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String path = "/storage/emulated/0/Download/1.mp3";
+        mEditText.setText(SimplePlayer.getInstance().getMediaUri() == null ? path : SimplePlayer.getInstance().getMediaUri());
+        initState();
+        SimplePlayer.getInstance().registerMediaControllerCallback(new MediaControllerCompat.Callback() {
             @Override
             public void onSessionDestroyed() {
                 super.onSessionDestroyed();
@@ -92,16 +100,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onMetadataChanged(MediaMetadataCompat metadata) {
                 super.onMetadataChanged(metadata);
-                Log.d("------", "onMetadataChanged: " + metadata.getDescription().getMediaUri());
+                if (metadata != null && metadata.getDescription() != null)
+                    Log.d("------", "onMetadataChanged: " + metadata.getDescription().getMediaUri());
             }
         });
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        String path = "/storage/emulated/0/Download/1.mp3";
-        mEditText.setText(SimplePlayer.getInstance().getMediaUri() == null ? path : SimplePlayer.getInstance().getMediaUri());
+    protected void onPause() {
+        super.onPause();
+        SimplePlayer.getInstance().unregisterMediaControllerCallback();
+    }
+
+    private void initState() {
         switch (SimplePlayer.getInstance().getState()) {
             case PlaybackStateCompat.STATE_PAUSED:
                 playState = 1;
