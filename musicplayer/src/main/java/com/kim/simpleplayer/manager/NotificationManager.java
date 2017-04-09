@@ -221,6 +221,13 @@ public class NotificationManager extends BroadcastReceiver {
                     art = BitmapFactory.decodeResource(mPlayerService.getResources(),
                             SimplePlayer.getInstance().getDefaultArtImgRes());
             }
+        } else {
+            if (SimplePlayer.getInstance().getDefaultArtImgRes() == -1)
+                art = BitmapFactory.decodeResource(mPlayerService.getResources(),
+                        R.drawable.ic_default_art);
+            else
+                art = BitmapFactory.decodeResource(mPlayerService.getResources(),
+                        SimplePlayer.getInstance().getDefaultArtImgRes());
         }
 
         builder

@@ -87,7 +87,10 @@ public class MediaQueueManager {
     public boolean skipQueuePosition(int amount) {
         int index = mCurrentIndex + amount;
         if (index < 0)
-            index = 0;
+            if (index + mPlayingQueue.size() >= 0)
+                index += mPlayingQueue.size();
+            else
+                index = 0;
         else
             index %= mPlayingQueue.size();
         if (!QueueHelper.isCurrentPlayable(mPlayingQueue, index))
