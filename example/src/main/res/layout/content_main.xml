@@ -24,7 +24,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/editText"
         android:layout_centerHorizontal="true"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:id="@+id/linearLayout">
 
         <Button
             android:id="@+id/button_pre"
@@ -55,5 +56,12 @@
 
     </LinearLayout>
 
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:max="100"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linearLayout"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

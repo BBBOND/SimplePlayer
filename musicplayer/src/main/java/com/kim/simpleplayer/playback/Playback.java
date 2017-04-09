@@ -48,6 +48,11 @@ public interface Playback {
     int getCurrentStreamPosition();
 
     /**
+     * @return the total length of currently item
+     */
+    int getDuration();
+
+    /**
      * Set the current position. Typically used when switching players that are in
      * paused state.
      *

@@ -12,13 +12,14 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.kim.simpleplayer.SimplePlayer;
+import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.model.MediaData;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText mEditText;
     private Button pre, next, play;
+    private SeekBar seekBar;
 
     private int playState = 0;
 
@@ -41,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         pre = (Button) findViewById(R.id.button_pre);
         next = (Button) findViewById(R.id.button_next);
         play = (Button) findViewById(R.id.button_play);
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        seekBar.setEnabled(false);
+        seekBar.setOnSeekBarChangeListener(new SeekBarChangeEvent());
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
@@ -48,12 +53,14 @@ public class MainActivity extends AppCompatActivity {
             play.setEnabled(true);
         }
 
+        SimplePlayer.getInstance().setPlayingActivity(MainActivity.class);
+        SimplePlayer.getInstance().setDefaultArtImgRes(R.mipmap.ic_launcher);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        String path = "/storage/emulated/0/Download/1.mp3";
+        String path = "http://10.0.2.2:8080/media/%E5%9B%A7%E8%8F%8C%20-%20%E4%B8%9C%E4%BA%AC%E4%B8%8D%E5%A4%AA%E7%83%AD.mp3";
         mEditText.setText(SimplePlayer.getInstance().getMediaUri() == null ? path : SimplePlayer.getInstance().getMediaUri());
         initState();
         SimplePlayer.getInstance().registerMediaControllerCallback(new MediaControllerCompat.Callback() {
@@ -72,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
                         play.setText("播放");
                         pre.setEnabled(true);
                         next.setEnabled(true);
+                        seekBar.setEnabled(true);
                         break;
                     case PlaybackStateCompat.STATE_PLAYING:
                         playState = 2;
@@ -79,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                         play.setText("暂停");
                         pre.setEnabled(true);
                         next.setEnabled(true);
+                        seekBar.setEnabled(true);
                         break;
                     case PlaybackStateCompat.STATE_STOPPED:
                         playState = 0;
@@ -86,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
                         play.setText("播放");
                         pre.setEnabled(true);
                         next.setEnabled(true);
+                        seekBar.setEnabled(false);
                         break;
                     case PlaybackStateCompat.STATE_BUFFERING:
                         playState = 3;
@@ -93,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                         play.setText("加载中...");
                         pre.setEnabled(true);
                         next.setEnabled(true);
+                        seekBar.setEnabled(false);
                         break;
                 }
             }
@@ -101,15 +112,45 @@ public class MainActivity extends AppCompatActivity {
             public void onMetadataChanged(MediaMetadataCompat metadata) {
                 super.onMetadataChanged(metadata);
                 if (metadata != null && metadata.getDescription() != null)
-                    Log.d("------", "onMetadataChanged: " + metadata.getDescription().getMediaUri());
+                    LogHelper.d("------", "onMetadataChanged: " + metadata.getDescription().getMediaUri());
+            }
+        });
+        registerProgressListener();
+    }
+
+    private void registerProgressListener() {
+        SimplePlayer.getInstance().setOnProgressChangeListener(new SimplePlayer.OnProgressChangeListener() {
+            @Override
+            public void progressChanged(int progress) {
+                if (seekBar != null)
+                    seekBar.setProgress(progress);
+            }
+
+            @Override
+            public void secondaryProgressChanged(int progress) {
+                int duration = SimplePlayer.getInstance().getDuration();
+                if (seekBar != null && duration > 0) {
+                    progress = (progress / duration) * seekBar.getMax();
+                    seekBar.setSecondaryProgress(progress);
+                }
+            }
+
+            @Override
+            public void completion() {
+                stopMusic();
             }
         });
     }
 
+    private void unregisterProgressListener() {
+        SimplePlayer.getInstance().setOnProgressChangeListener(null);
+    }
+
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onStop() {
         SimplePlayer.getInstance().unregisterMediaControllerCallback();
+        unregisterProgressListener();
+        super.onStop();
     }
 
     private void initState() {
@@ -120,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
                 play.setText("播放");
                 pre.setEnabled(true);
                 next.setEnabled(true);
+                seekBar.setEnabled(true);
                 break;
             case PlaybackStateCompat.STATE_PLAYING:
                 playState = 2;
@@ -127,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
                 play.setText("暂停");
                 pre.setEnabled(true);
                 next.setEnabled(true);
+                seekBar.setEnabled(true);
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 playState = 0;
@@ -134,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
                 play.setText("播放");
                 pre.setEnabled(true);
                 next.setEnabled(true);
+                seekBar.setEnabled(false);
                 break;
             case PlaybackStateCompat.STATE_BUFFERING:
                 playState = 3;
@@ -141,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
                 play.setText("加载中...");
                 pre.setEnabled(true);
                 next.setEnabled(true);
+                seekBar.setEnabled(false);
                 break;
         }
     }
@@ -149,6 +194,8 @@ public class MainActivity extends AppCompatActivity {
         switch (playState) {
             case 0:
                 playMusicFirst();
+                play.setText("加载中...");
+                play.setEnabled(false);
                 break;
             case 1:
                 playMusic();
@@ -287,17 +334,24 @@ public class MainActivity extends AppCompatActivity {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    @Override
-    public void onBackPressed() {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.addCategory(Intent.CATEGORY_HOME);
-        startActivity(intent);
+    private class SeekBarChangeEvent implements SeekBar.OnSeekBarChangeListener {
+        int progress;
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            this.progress = progress * SimplePlayer.getInstance().getDuration() / seekBar.getMax();
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            unregisterProgressListener();
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            SimplePlayer.getInstance().seekTo(progress);
+            registerProgressListener();
+        }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        SimplePlayer.getInstance().release();
-    }
 }

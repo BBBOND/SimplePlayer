@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.annotation.DrawableRes;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -32,7 +33,11 @@ public class SimplePlayer {
     private MediaControllerCompat.TransportControls mTransportControls;
     private MediaControllerCompat.Callback mcb;
 
+    private OnProgressChangeListener mOnProgressChangeListener;
+
     private PlayerService mPlayerService;
+
+    private int mDefaultArtImgRes = -1;
 
     private static Class mPlayingActivity;
 
@@ -61,12 +66,17 @@ public class SimplePlayer {
             mMediaController.unregisterCallback(mcb);
         this.mcb = null;
     }
+
     public void setMediaDataList(List<MediaData> mediaDataList) {
         mMediaDataList = mediaDataList;
     }
 
-    public void setPlayingActivity(Class mPlayingActivity) {
-        SimplePlayer.mPlayingActivity = mPlayingActivity;
+    public OnProgressChangeListener getOnProgressChangeListener() {
+        return mOnProgressChangeListener;
+    }
+
+    public void setOnProgressChangeListener(OnProgressChangeListener onProgressChangeListener) {
+        this.mOnProgressChangeListener = onProgressChangeListener;
     }
 
     public void getTransportControls(final Context context, final GetTransportControlsCallback callback) {
@@ -152,13 +162,35 @@ public class SimplePlayer {
         return mMediaDataList;
     }
 
+    public void setPlayingActivity(Class mPlayingActivity) {
+        SimplePlayer.mPlayingActivity = mPlayingActivity;
+    }
+
     public Class getPlayingActivity() {
         return mPlayingActivity;
     }
 
+    public int getDefaultArtImgRes() {
+        return mDefaultArtImgRes;
+    }
+
+    public void setDefaultArtImgRes(@DrawableRes int mDefaultArtImg) {
+        this.mDefaultArtImgRes = mDefaultArtImg;
+    }
+
+    public void seekTo(int position) {
+        if (mPlayerService != null)
+            mPlayerService.seekTo(position);
+    }
+
+    public int getDuration() {
+        if (mPlayerService != null)
+            return mPlayerService.getDuration();
+        else
+            return 0;
+    }
+
     public void release() {
-        if (mMediaController != null && mcb != null)
-            mMediaController.unregisterCallback(mcb);
     }
 
     private interface ConnectCallback {
@@ -171,5 +203,13 @@ public class SimplePlayer {
         void success(MediaControllerCompat.TransportControls transportControls);
 
         void error(String errorMsg);
+    }
+
+    public interface OnProgressChangeListener {
+        void progressChanged(int progress);
+
+        void secondaryProgressChanged(int progress);
+
+        void completion();
     }
 }

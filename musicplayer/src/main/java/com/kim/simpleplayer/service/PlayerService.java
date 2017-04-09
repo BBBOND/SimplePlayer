@@ -12,6 +12,7 @@ import android.os.RemoteException;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 
 import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.helper.LogHelper;
@@ -22,6 +23,8 @@ import com.kim.simpleplayer.playback.LocalPlayback;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PlayerService extends Service implements PlaybackManager.PlaybackServiceCallback {
 
@@ -30,6 +33,7 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
     public static final String ACTION_CMD = "com.kim.simpleplayer.ACTION_CMD";
     public static final String CMD_NAME = "CMD_NAME";
     public static final String CMD_PAUSE = "CMD_PAUSE";
+    public static final String CMD_STOP = "CMD_STOP";
 
     private static final int STOP_DELAY = 30000;
 
@@ -44,34 +48,33 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
     @Override
     public void onCreate() {
         super.onCreate();
-        if (SimplePlayer.getInstance().getMediaDataList() == null) return;
-        MediaQueueManager mediaQueueManager = new MediaQueueManager(SimplePlayer.getInstance().getMediaDataList(),
-                new MediaQueueManager.MediaDataUpdateListener() {
-                    @Override
-                    public void onMediaDataChange(MediaMetadataCompat metadata) {
-                        mMediaSessionCompat.setMetadata(metadata);
-                    }
+        LogHelper.d(TAG, "onCreate");
+        LogHelper.d(TAG, "getMediaDataList ", SimplePlayer.getInstance().getMediaDataList());
+        MediaQueueManager mMediaQueueManager = new MediaQueueManager(new MediaQueueManager.MediaDataUpdateListener() {
+            @Override
+            public void onMediaDataChange(MediaMetadataCompat metadata) {
+                mMediaSessionCompat.setMetadata(metadata);
+            }
 
-                    @Override
-                    public void onMediaDataRetrieveError() {
-                        mPlaybackManager.updatePlaybackState("无法取到媒体数据");
-                    }
+            @Override
+            public void onMediaDataRetrieveError() {
+                mPlaybackManager.updatePlaybackState("无法取到媒体数据");
+            }
 
-                    @Override
-                    public void onCurrentQueueIndexUpdated(int queueIndex) {
-                        mPlaybackManager.handlePlayRequest();
-                    }
+            @Override
+            public void onCurrentQueueIndexUpdated(int queueIndex) {
+                mPlaybackManager.handlePlayRequest();
+            }
 
-                    @Override
-                    public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
-                        mMediaSessionCompat.setQueue(newQueue);
-                        mMediaSessionCompat.setQueueTitle(title);
-                    }
-                });
+            @Override
+            public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
+                mMediaSessionCompat.setQueue(newQueue);
+                mMediaSessionCompat.setQueueTitle(title);
+            }
+        });
 
-        LocalPlayback playback = new LocalPlayback(this, mediaQueueManager);
-        mPlaybackManager = new PlaybackManager(this, mediaQueueManager, playback, this);
-
+        LocalPlayback playback = new LocalPlayback(this, mMediaQueueManager);
+        mPlaybackManager = new PlaybackManager(this, mMediaQueueManager, playback, this);
 
         String pkg = this.getPackageName();
         mMediaSessionCompat = new MediaSessionCompat(this, TAG, new ComponentName(pkg, TAG), null);
@@ -96,6 +99,8 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
             if (ACTION_CMD.equals(action)) {
                 if (CMD_PAUSE.equals(command)) {
                     mPlaybackManager.handlePauseRequest();
+                } else if (CMD_STOP.equals(command)) {
+                    mPlaybackManager.handleStopRequest(null);
                 }
             }
         }
@@ -122,20 +127,6 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
         return binder;
     }
 
-    public MediaSessionCompat.Token getSessionToken() {
-        if (mMediaSessionCompat != null)
-            return mMediaSessionCompat.getSessionToken();
-        else
-            return null;
-    }
-
-    public int getState() {
-        if (mPlaybackManager != null && mPlaybackManager.getPlayback() != null)
-            return mPlaybackManager.getPlayback().getState();
-        else
-            return -1;
-    }
-
     @Override
     public void onPlaybackStart() {
         mMediaSessionCompat.setActive(true);
@@ -159,6 +150,32 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
     @Override
     public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
         mMediaSessionCompat.setPlaybackState(newState);
+    }
+
+    public MediaSessionCompat.Token getSessionToken() {
+        if (mMediaSessionCompat != null)
+            return mMediaSessionCompat.getSessionToken();
+        else
+            return null;
+    }
+
+    public int getState() {
+        if (mPlaybackManager != null && mPlaybackManager.getPlayback() != null)
+            return mPlaybackManager.getPlayback().getState();
+        else
+            return -1;
+    }
+
+    public void seekTo(int position) {
+        if (mPlaybackManager != null && mPlaybackManager.getPlayback() != null)
+            mPlaybackManager.getPlayback().seekTo(position);
+    }
+
+    public int getDuration() {
+        if (mPlaybackManager != null && mPlaybackManager.getPlayback() != null)
+            return mPlaybackManager.getPlayback().getDuration();
+        else
+            return 0;
     }
 
     private static class DelayedStopHandler extends Handler {

@@ -37,6 +37,7 @@ public class NotificationManager extends BroadcastReceiver {
     public static final String ACTION_PLAY = "com.kim.simpleplayer.play";
     public static final String ACTION_PREV = "com.kim.simpleplayer.prev";
     public static final String ACTION_NEXT = "com.kim.simpleplayer.next";
+    public static final String ACTION_STOP = "com.kim.simpleplayer.stop_cast";
 
     private static final int NOTIFICATION_ID = 1994;
     private static final int REQUEST_CODE = 100;
@@ -50,6 +51,7 @@ public class NotificationManager extends BroadcastReceiver {
     private final PendingIntent mPlayIntent;
     private final PendingIntent mPreviousIntent;
     private final PendingIntent mNextIntent;
+    private final PendingIntent mStopIntent;
 
     private final NotificationManagerCompat mNotificationManager;
 
@@ -75,6 +77,8 @@ public class NotificationManager extends BroadcastReceiver {
                 new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         mNextIntent = PendingIntent.getBroadcast(playerService, REQUEST_CODE,
                 new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mStopIntent = PendingIntent.getBroadcast(playerService, REQUEST_CODE,
+                new Intent(ACTION_STOP).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
 
         mNotificationManager.cancelAll();
     }
@@ -95,6 +99,7 @@ public class NotificationManager extends BroadcastReceiver {
                 filter.addAction(ACTION_PAUSE);
                 filter.addAction(ACTION_PLAY);
                 filter.addAction(ACTION_PREV);
+                filter.addAction(ACTION_STOP);
                 mPlayerService.registerReceiver(this, filter);
 
                 mPlayerService.startForeground(NOTIFICATION_ID, notification);
@@ -132,6 +137,12 @@ public class NotificationManager extends BroadcastReceiver {
                 break;
             case ACTION_PREV:
                 mTransportControls.skipToPrevious();
+                break;
+            case ACTION_STOP:
+                Intent i = new Intent(context, PlayerService.class);
+                i.setAction(PlayerService.ACTION_CMD);
+                i.putExtra(PlayerService.CMD_NAME, PlayerService.CMD_STOP);
+                mPlayerService.startService(i);
                 break;
             default:
                 LogHelper.d(TAG, "为止的广播意图（已忽略）: " + action);
@@ -191,6 +202,9 @@ public class NotificationManager extends BroadcastReceiver {
                     mPlayerService.getString(R.string.label_next), mNextIntent);
         }
 
+        builder.addAction(R.drawable.ic_close_black_24dp,
+                mPlayerService.getString(R.string.label_stop), mStopIntent);
+
         MediaDescriptionCompat description = mMetadata.getDescription();
 
         String fetchArtUrl = null;
@@ -200,8 +214,12 @@ public class NotificationManager extends BroadcastReceiver {
             art = ImageCacheUtil.getInstance().getBigImage(artUrl);
             if (art == null) {
                 fetchArtUrl = artUrl;
-                art = BitmapFactory.decodeResource(mPlayerService.getResources(),
-                        R.drawable.ic_default_art);
+                if (SimplePlayer.getInstance().getDefaultArtImgRes() == -1)
+                    art = BitmapFactory.decodeResource(mPlayerService.getResources(),
+                            R.drawable.ic_default_art);
+                else
+                    art = BitmapFactory.decodeResource(mPlayerService.getResources(),
+                            SimplePlayer.getInstance().getDefaultArtImgRes());
             }
         }
 

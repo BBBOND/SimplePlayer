@@ -23,9 +23,13 @@ public class MediaQueueManager {
     private List<MediaSessionCompat.QueueItem> mPlayingQueue;
     private int mCurrentIndex;
 
+    public MediaQueueManager(MediaDataUpdateListener mediaDataUpdateListener) {
+        this(SimplePlayer.getInstance().getMediaDataList(), mediaDataUpdateListener);
+    }
+
     public MediaQueueManager(List<MediaData> mediaDataList,
-                             MediaDataUpdateListener mMediaDataUpdateListener) {
-        this.mMediaDataUpdateListener = mMediaDataUpdateListener;
+                             MediaDataUpdateListener mediaDataUpdateListener) {
+        this.mMediaDataUpdateListener = mediaDataUpdateListener;
 
         mPlayingQueue = QueueHelper.formatMediaData2QueueItem(mediaDataList);
         mCurrentIndex = 0;

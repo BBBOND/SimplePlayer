@@ -7,17 +7,23 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 
+import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.manager.MediaQueueManager;
 import com.kim.simpleplayer.service.PlayerService;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by bbbond on 2017/3/20.
@@ -28,7 +34,8 @@ public class LocalPlayback implements Playback,
         MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnSeekCompleteListener {
+        MediaPlayer.OnSeekCompleteListener,
+        MediaPlayer.OnBufferingUpdateListener {
 
     private static final String TAG = LocalPlayback.class.getSimpleName();
 
@@ -53,6 +60,8 @@ public class LocalPlayback implements Playback,
     private final AudioManager mAudioManager;
     private MediaPlayer mMediaPlayer;
 
+    private Timer timer;
+    private final ProgressHandler mProgressHandler = new ProgressHandler(this);
     private final IntentFilter mAudioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
 
     private final BroadcastReceiver mAudioNoisyReceiver = new BroadcastReceiver() {
@@ -121,6 +130,11 @@ public class LocalPlayback implements Playback,
     }
 
     @Override
+    public int getDuration() {
+        return mMediaPlayer != null ? mMediaPlayer.getDuration() : 0;
+    }
+
+    @Override
     public void updateLastKnownStreamPosition() {
         if (mMediaPlayer != null)
             mCurrentPosition = mMediaPlayer.getCurrentPosition();
@@ -169,6 +183,7 @@ public class LocalPlayback implements Playback,
                     mCallback.onError(e.getMessage());
             }
         }
+
     }
 
     @Override
@@ -232,7 +247,7 @@ public class LocalPlayback implements Playback,
                 focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
                 focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
             boolean canDuck = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
-            mAudioFocus = canDuck ? AUDIO_NO_FOCUS_NO_DUCK : AUDIO_NO_FOCUS_CAN_DUCK;
+            mAudioFocus = canDuck ? AUDIO_NO_FOCUS_CAN_DUCK : AUDIO_NO_FOCUS_NO_DUCK;
 
             if (mState == PlaybackStateCompat.STATE_PLAYING && !canDuck)
                 mPlayOnFocusGain = true;
@@ -250,6 +265,7 @@ public class LocalPlayback implements Playback,
             registerAudioNoisyReceiver();
             mMediaPlayer.start();
             mState = PlaybackStateCompat.STATE_PLAYING;
+            startListeningProgress();
         }
         if (mCallback != null)
             mCallback.onPlaybackStatusChanged(mState);
@@ -260,6 +276,9 @@ public class LocalPlayback implements Playback,
         LogHelper.d(TAG, "MediaPlayer播放完成！");
         if (mCallback != null)
             mCallback.onCompletion();
+        if (SimplePlayer.getInstance().getOnProgressChangeListener() != null)
+            SimplePlayer.getInstance().getOnProgressChangeListener().completion();
+        stopListeningProgress();
     }
 
     @Override
@@ -273,7 +292,14 @@ public class LocalPlayback implements Playback,
         LogHelper.d(TAG, "播放发生异常: what: " + what + ", extra: " + extra);
         if (mCallback != null)
             mCallback.onError("MediaPlayer error " + what + " (" + extra + ")");
+        stopListeningProgress();
         return true;
+    }
+
+    @Override
+    public void onBufferingUpdate(MediaPlayer mp, int percent) {
+        if (SimplePlayer.getInstance().getOnProgressChangeListener() != null)
+            SimplePlayer.getInstance().getOnProgressChangeListener().secondaryProgressChanged(percent);
     }
 
     private void tryToGetAudioFocus() {
@@ -322,6 +348,7 @@ public class LocalPlayback implements Playback,
         if (mWifiLock.isHeld()) {
             mWifiLock.release();
         }
+        stopListeningProgress();
     }
 
     private void configMediaPlayerState() {
@@ -351,6 +378,7 @@ public class LocalPlayback implements Playback,
                         mMediaPlayer.seekTo(mCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                     }
+                    startListeningProgress();
                 }
                 mPlayOnFocusGain = false;
             }
@@ -376,6 +404,54 @@ public class LocalPlayback implements Playback,
             mMediaPlayer.setOnSeekCompleteListener(this);
         } else {
             mMediaPlayer.reset();
+        }
+    }
+
+    private void startListeningProgress() {
+        if (timer == null) {
+            LogHelper.d(TAG, "开始监听播放进度");
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (mMediaPlayer == null)
+                        return;
+                    if (isPlaying()) {
+                        mProgressHandler.sendEmptyMessage(0); // 发送消息
+                    }
+                }
+            }, 0, 1000);
+        }
+    }
+
+    private void stopListeningProgress() {
+        LogHelper.d(TAG, "取消监听播放进度");
+        if (timer != null)
+            timer.cancel();
+        timer = null;
+        mProgressHandler.removeCallbacksAndMessages(null);
+    }
+
+    private static class ProgressHandler extends Handler {
+        private final WeakReference<LocalPlayback> mWeakReference;
+
+        private ProgressHandler(LocalPlayback playback) {
+            mWeakReference = new WeakReference<LocalPlayback>(playback);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            LocalPlayback playback = mWeakReference.get();
+            SimplePlayer.OnProgressChangeListener listener = SimplePlayer.getInstance().getOnProgressChangeListener();
+            if (playback != null && listener != null) {
+                int position = playback.getCurrentStreamPosition();
+                int duration = playback.getDuration();
+                if (duration > 0) {
+                    // 计算进度（获取进度条最大刻度*当前音乐播放位置 / 当前音乐时长）
+                    long pos = 100 * position / duration;
+                    listener.progressChanged((int) pos);
+                }
+            }
         }
     }
 }
