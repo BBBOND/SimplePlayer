@@ -12,7 +12,6 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
-import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.model.MediaData;
 import com.kim.simpleplayer.service.PlayerService;
 

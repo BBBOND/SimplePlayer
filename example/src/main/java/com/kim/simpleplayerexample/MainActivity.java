@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        String path = "http://10.0.2.2:8080/media/%E5%9B%A7%E8%8F%8C%20-%20%E4%B8%9C%E4%BA%AC%E4%B8%8D%E5%A4%AA%E7%83%AD.mp3";
+        String path = "http://192.168.31.137:8080/media/%E5%9B%A7%E8%8F%8C%20-%20%E4%B8%9C%E4%BA%AC%E4%B8%8D%E5%A4%AA%E7%83%AD.mp3";
         mEditText.setText(SimplePlayer.getInstance().getMediaUri() == null ? path : SimplePlayer.getInstance().getMediaUri());
         initState();
         SimplePlayer.getInstance().registerMediaControllerCallback(new MediaControllerCompat.Callback() {
@@ -129,9 +129,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void secondaryProgressChanged(int progress) {
-                int duration = SimplePlayer.getInstance().getDuration();
-                if (seekBar != null && duration > 0) {
-                    progress = (progress / duration) * seekBar.getMax();
+                if (seekBar != null) {
+                    progress = (int) ((progress / 100.0) * seekBar.getMax());
                     seekBar.setSecondaryProgress(progress);
                 }
             }
@@ -329,8 +328,8 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle("1")
                 .setDisplayTitle("2")
                 .setDisplaySubtitle("3")
-                .setArtUri("")
-                .setAlbumArtUri("")
+                .setArtUri(null)
+                .setAlbumArtUri(null)
                 .setArtist("4")
                 .setAuthor("5");
         boolean result = SimplePlayer.getInstance().addMediaData(mediaData);

@@ -403,6 +403,7 @@ public class LocalPlayback implements Playback,
             mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setOnErrorListener(this);
             mMediaPlayer.setOnSeekCompleteListener(this);
+            mMediaPlayer.setOnBufferingUpdateListener(this);
         } else {
             mMediaPlayer.reset();
         }
