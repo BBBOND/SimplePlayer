@@ -276,6 +276,7 @@ public class LocalPlayback implements Playback,
         LogHelper.d(TAG, "MediaPlayer播放完成！");
         if (mCallback != null)
             mCallback.onCompletion();
+        mCurrentPosition = 0;
         if (SimplePlayer.getInstance().getOnProgressChangeListener() != null)
             SimplePlayer.getInstance().getOnProgressChangeListener().completion();
         stopListeningProgress();

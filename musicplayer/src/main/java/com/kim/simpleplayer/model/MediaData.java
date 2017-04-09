@@ -111,208 +111,234 @@ public class MediaData implements MediaDataSourceI {
         return author;
     }
 
-    public void setAuthor(String author) {
+    public MediaData setAuthor(String author) {
         this.author = author;
+        return this;
     }
 
     public String getMediaId() {
         return mediaId;
     }
 
-    public void setMediaId(String mediaId) {
+    public MediaData setMediaId(String mediaId) {
         this.mediaId = mediaId;
+        return this;
     }
 
     public String getMediaUri() {
         return mediaUri;
     }
 
-    public void setMediaUri(String mediaUri) {
+    public MediaData setMediaUri(String mediaUri) {
         this.mediaUri = mediaUri;
+        return this;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
+    public MediaData setTitle(String title) {
         this.title = title;
+        return this;
     }
 
     public String getDisplayTitle() {
         return displayTitle;
     }
 
-    public void setDisplayTitle(String displayTitle) {
+    public MediaData setDisplayTitle(String displayTitle) {
         this.displayTitle = displayTitle;
+        return this;
     }
 
     public String getDisplaySubtitle() {
         return displaySubtitle;
     }
 
-    public void setDisplaySubtitle(String displaySubtitle) {
+    public MediaData setDisplaySubtitle(String displaySubtitle) {
         this.displaySubtitle = displaySubtitle;
+        return this;
     }
 
     public String getDisplayDescription() {
         return displayDescription;
     }
 
-    public void setDisplayDescription(String displayDescription) {
+    public MediaData setDisplayDescription(String displayDescription) {
         this.displayDescription = displayDescription;
+        return this;
     }
 
     public String getArtUri() {
         return artUri;
     }
 
-    public void setArtUri(String artUri) {
+    public MediaData setArtUri(String artUri) {
         this.artUri = artUri;
+        return this;
     }
 
     public String getDisplayIconUri() {
         return displayIconUri;
     }
 
-    public void setDisplayIconUri(String displayIconUri) {
+    public MediaData setDisplayIconUri(String displayIconUri) {
         this.displayIconUri = displayIconUri;
+        return this;
     }
 
     public String getAlbum() {
         return album;
     }
 
-    public void setAlbum(String album) {
+    public MediaData setAlbum(String album) {
         this.album = album;
+        return this;
     }
 
     public String getAlbumArtist() {
         return albumArtist;
     }
 
-    public void setAlbumArtist(String albumArtist) {
+    public MediaData setAlbumArtist(String albumArtist) {
         this.albumArtist = albumArtist;
+        return this;
     }
 
     public String getAlbumArtUri() {
         return albumArtUri;
     }
 
-    public void setAlbumArtUri(String albumArtUri) {
+    public MediaData setAlbumArtUri(String albumArtUri) {
         this.albumArtUri = albumArtUri;
+        return this;
     }
 
     public String getArtist() {
         return artist;
     }
 
-    public void setArtist(String artist) {
+    public MediaData setArtist(String artist) {
         this.artist = artist;
+        return this;
     }
 
     public String getWriter() {
         return writer;
     }
 
-    public void setWriter(String writer) {
+    public MediaData setWriter(String writer) {
         this.writer = writer;
+        return this;
     }
 
     public String getComposer() {
         return composer;
     }
 
-    public void setComposer(String composer) {
+    public MediaData setComposer(String composer) {
         this.composer = composer;
+        return this;
     }
 
     public String getCompilation() {
         return compilation;
     }
 
-    public void setCompilation(String compilation) {
+    public MediaData setCompilation(String compilation) {
         this.compilation = compilation;
+        return this;
     }
 
     public String getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public MediaData setDate(String date) {
         this.date = date;
+        return this;
     }
 
     public long getYear() {
         return year;
     }
 
-    public void setYear(long year) {
+    public MediaData setYear(long year) {
         this.year = year;
+        return this;
     }
 
     public long getDiscNumber() {
         return discNumber;
     }
 
-    public void setDiscNumber(long discNumber) {
+    public MediaData setDiscNumber(long discNumber) {
         this.discNumber = discNumber;
+        return this;
     }
 
     public String getGenre() {
         return genre;
     }
 
-    public void setGenre(String genre) {
+    public MediaData setGenre(String genre) {
         this.genre = genre;
+        return this;
     }
 
     public long getTrackNumber() {
         return trackNumber;
     }
 
-    public void setTrackNumber(long trackNumber) {
+    public MediaData setTrackNumber(long trackNumber) {
         this.trackNumber = trackNumber;
+        return this;
     }
 
     public long getDuration() {
         return duration;
     }
 
-    public void setDuration(long duration) {
+    public MediaData setDuration(long duration) {
         this.duration = duration;
+        return this;
     }
 
     public long getNumTracks() {
         return numTracks;
     }
 
-    public void setNumTracks(long numTracks) {
+    public MediaData setNumTracks(long numTracks) {
         this.numTracks = numTracks;
+        return this;
     }
 
     public long getBtFolderType() {
         return btFolderType;
     }
 
-    public void setBtFolderType(long btFolderType) {
+    public MediaData setBtFolderType(long btFolderType) {
         this.btFolderType = btFolderType;
+        return this;
     }
 
     public float getRating() {
         return rating;
     }
 
-    public void setRating(float rating) {
+    public MediaData setRating(float rating) {
         this.rating = rating;
+        return this;
     }
 
     public float getUserRating() {
         return userRating;
     }
 
-    public void setUserRating(float userRating) {
+    public MediaData setUserRating(float userRating) {
         this.userRating = userRating;
+        return this;
     }
 
     @Override

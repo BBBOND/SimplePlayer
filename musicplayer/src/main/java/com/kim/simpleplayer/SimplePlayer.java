@@ -7,13 +7,16 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
+import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.model.MediaData;
 import com.kim.simpleplayer.service.PlayerService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,6 +41,7 @@ public class SimplePlayer {
     private PlayerService mPlayerService;
 
     private int mDefaultArtImgRes = -1;
+    private boolean mPlayContinuously = false;
 
     private static Class mPlayingActivity;
 
@@ -67,8 +71,31 @@ public class SimplePlayer {
         this.mcb = null;
     }
 
-    public void setMediaDataList(List<MediaData> mediaDataList) {
+    public void setMediaDataList(@NonNull String title, List<MediaData> mediaDataList, String initialMediaId) {
         mMediaDataList = mediaDataList;
+        if (mPlayerService != null) {
+            mPlayerService.setCurrentQueue(title, mediaDataList, initialMediaId);
+        }
+    }
+
+    public boolean addMediaData(MediaData mediaData) {
+        if (mMediaDataList == null) {
+            mMediaDataList = new ArrayList<>();
+        }
+        String mediaId = mediaData.getMediaId();
+        if (mediaId == null || mediaId.isEmpty()) {
+            return false;
+        }
+        for (MediaData m : mMediaDataList) {
+            if (mediaId.equals(m.getMediaId())) {
+                return false;
+            }
+        }
+        mMediaDataList.add(mediaData);
+        if (mPlayerService != null) {
+            mPlayerService.setCurrentQueue("music", mMediaDataList, null);
+        }
+        return true;
     }
 
     public OnProgressChangeListener getOnProgressChangeListener() {
@@ -178,9 +205,12 @@ public class SimplePlayer {
         this.mDefaultArtImgRes = mDefaultArtImg;
     }
 
-    public void seekTo(int position) {
-        if (mPlayerService != null)
-            mPlayerService.seekTo(position);
+    public boolean isPlayContinuously() {
+        return mPlayContinuously;
+    }
+
+    public void setPlayContinuously(boolean playContinuously) {
+        this.mPlayContinuously = playContinuously;
     }
 
     public int getDuration() {

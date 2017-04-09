@@ -64,4 +64,13 @@
         android:layout_below="@+id/linearLayout"
         android:layout_centerHorizontal="true" />
 
+    <Button
+        android:id="@+id/addMusic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/seekBar"
+        android:layout_marginTop="10dp"
+        android:onClick="addMusic"
+        android:text="增加歌曲"/>
+
 </RelativeLayout>

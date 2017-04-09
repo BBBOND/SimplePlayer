@@ -1,7 +1,6 @@
 package com.kim.simpleplayerexample;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,6 +22,7 @@ import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.model.MediaData;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
         SimplePlayer.getInstance().setPlayingActivity(MainActivity.class);
         SimplePlayer.getInstance().setDefaultArtImgRes(R.mipmap.ic_launcher);
+        SimplePlayer.getInstance().setPlayContinuously(true);
     }
 
     @Override
@@ -137,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void completion() {
-                stopMusic();
+//                stopMusic();
+                Toast.makeText(MainActivity.this, "播放完成", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -207,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "未知状态", Toast.LENGTH_SHORT).show();
                 break;
         }
-
     }
 
     public void pre(View view) {
@@ -256,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
             md.setAuthor("鹏泊");
             List<MediaData> mediaDatas = new ArrayList<>();
             mediaDatas.add(md);
-            SimplePlayer.getInstance().setMediaDataList(mediaDatas);
+            SimplePlayer.getInstance().setMediaDataList("music", mediaDatas, null);
             SimplePlayer.getInstance().getTransportControls(this, new SimplePlayer.GetTransportControlsCallback() {
                 @Override
                 public void success(MediaControllerCompat.TransportControls transportControls) {
@@ -321,6 +322,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void addMusic(View view) {
+        MediaData mediaData = new MediaData()
+                .setMediaId(new Date().getTime() + "")
+                .setMediaUri(mEditText.getText().toString())
+                .setTitle("1")
+                .setDisplayTitle("2")
+                .setDisplaySubtitle("3")
+                .setArtUri("")
+                .setAlbumArtUri("")
+                .setArtist("4")
+                .setAuthor("5");
+        boolean result = SimplePlayer.getInstance().addMediaData(mediaData);
+        Toast.makeText(this, result ? "添加成功" : "添加失败", Toast.LENGTH_SHORT).show();
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 1) {
@@ -349,8 +365,21 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            SimplePlayer.getInstance().seekTo(progress);
-            registerProgressListener();
+            SimplePlayer.getInstance().getTransportControls(MainActivity.this, new SimplePlayer.GetTransportControlsCallback() {
+                @Override
+                public void success(MediaControllerCompat.TransportControls transportControls) {
+                    if (transportControls != null)
+                        transportControls.seekTo(progress);
+                    registerProgressListener();
+                }
+
+                @Override
+                public void error(String errorMsg) {
+                    Toast.makeText(MainActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+                    registerProgressListener();
+                }
+            });
+
         }
     }
 

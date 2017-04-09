@@ -19,6 +19,7 @@ import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.manager.MediaQueueManager;
 import com.kim.simpleplayer.manager.NotificationManager;
 import com.kim.simpleplayer.manager.PlaybackManager;
+import com.kim.simpleplayer.model.MediaData;
 import com.kim.simpleplayer.playback.LocalPlayback;
 
 import java.lang.ref.WeakReference;
@@ -38,6 +39,7 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
     private static final int STOP_DELAY = 30000;
 
     private PlaybackManager mPlaybackManager;
+    private MediaQueueManager mMediaQueueManager;
 
     private final DelayedStopHandler mDelayedStopHandler = new DelayedStopHandler(this);
     private final IBinder binder = new PlayerBinder();
@@ -50,7 +52,7 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
         super.onCreate();
         LogHelper.d(TAG, "onCreate");
         LogHelper.d(TAG, "getMediaDataList ", SimplePlayer.getInstance().getMediaDataList());
-        MediaQueueManager mMediaQueueManager = new MediaQueueManager(new MediaQueueManager.MediaDataUpdateListener() {
+        mMediaQueueManager = new MediaQueueManager(new MediaQueueManager.MediaDataUpdateListener() {
             @Override
             public void onMediaDataChange(MediaMetadataCompat metadata) {
                 mMediaSessionCompat.setMetadata(metadata);
@@ -166,16 +168,17 @@ public class PlayerService extends Service implements PlaybackManager.PlaybackSe
             return -1;
     }
 
-    public void seekTo(int position) {
-        if (mPlaybackManager != null && mPlaybackManager.getPlayback() != null)
-            mPlaybackManager.getPlayback().seekTo(position);
-    }
-
     public int getDuration() {
         if (mPlaybackManager != null && mPlaybackManager.getPlayback() != null)
             return mPlaybackManager.getPlayback().getDuration();
         else
             return 0;
+    }
+
+    public void setCurrentQueue(String title, List<MediaData> newQueue, String initialMediaId) {
+        if (mMediaQueueManager != null) {
+            mMediaQueueManager.setCurrentQueue(title, newQueue, initialMediaId);
+        }
     }
 
     private static class DelayedStopHandler extends Handler {

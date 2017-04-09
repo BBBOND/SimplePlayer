@@ -6,6 +6,7 @@ import android.os.SystemClock;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
+import com.kim.simpleplayer.SimplePlayer;
 import com.kim.simpleplayer.helper.LogHelper;
 import com.kim.simpleplayer.playback.Playback;
 
@@ -37,7 +38,7 @@ public class PlaybackManager implements Playback.Callback {
 
     @Override
     public void onCompletion() {
-        if (mMediaQueueManager.skipQueuePosition(1)) {
+        if (SimplePlayer.getInstance().isPlayContinuously() && mMediaQueueManager.skipQueuePosition(1)) {
             handlePlayRequest();
             mMediaQueueManager.updateMetadata(mContext);
         } else {

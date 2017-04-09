@@ -113,7 +113,7 @@ public class MediaQueueManager {
      * @param title
      * @param newQueue
      */
-    public void setCurrentQueue(String title, List<MediaSessionCompat.QueueItem> newQueue) {
+    public void setCurrentQueue(String title, List<MediaData> newQueue) {
         setCurrentQueue(title, newQueue, null);
     }
 
@@ -124,13 +124,13 @@ public class MediaQueueManager {
      * @param newQueue
      * @param initialMediaId
      */
-    public void setCurrentQueue(String title, List<MediaSessionCompat.QueueItem> newQueue, String initialMediaId) {
-        mPlayingQueue = newQueue;
+    public void setCurrentQueue(String title, List<MediaData> newQueue, String initialMediaId) {
+        mPlayingQueue = QueueHelper.formatMediaData2QueueItem(newQueue);
         int index = 0;
         if (initialMediaId != null)
             index = QueueHelper.getIndexOnQueue(mPlayingQueue, initialMediaId);
         mCurrentIndex = Math.max(index, 0);
-        mMediaDataUpdateListener.onQueueUpdated(title, newQueue);
+        mMediaDataUpdateListener.onQueueUpdated(title, QueueHelper.formatMediaData2QueueItem(newQueue));
     }
 
     /**
