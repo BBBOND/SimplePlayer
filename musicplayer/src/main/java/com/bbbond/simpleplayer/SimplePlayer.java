@@ -40,6 +40,7 @@ public class SimplePlayer {
     private PlayerService mPlayerService;
 
     private int mDefaultArtImgRes = -1;
+    private int mSmallNotificationIcon = -1;
     private boolean mPlayContinuously = false;
 
     private static Class mPlayingActivity;
@@ -202,6 +203,14 @@ public class SimplePlayer {
 
     public void setDefaultArtImgRes(@DrawableRes int mDefaultArtImg) {
         this.mDefaultArtImgRes = mDefaultArtImg;
+    }
+
+    public int getSmallNotificationIcon() {
+        return mSmallNotificationIcon;
+    }
+
+    public void setSmallNotificationIcon(@DrawableRes int smallNotificationIcon) {
+        this.mSmallNotificationIcon = smallNotificationIcon;
     }
 
     public boolean isPlayContinuously() {

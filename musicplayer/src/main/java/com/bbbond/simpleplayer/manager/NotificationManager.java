@@ -235,7 +235,7 @@ public class NotificationManager extends BroadcastReceiver {
                         .setShowActionsInCompactView(playPauseButtonPosition)
                         .setMediaSession(mSessionToken))
                 .setColor(mNotificationColor)
-                .setSmallIcon(R.drawable.ic_sp_notification)
+                .setSmallIcon(SimplePlayer.getInstance().getSmallNotificationIcon() != -1 ? SimplePlayer.getInstance().getSmallNotificationIcon() : R.drawable.ic_sp_notification)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setUsesChronometer(true)
                 .setContentIntent(createContentIntent(description))
