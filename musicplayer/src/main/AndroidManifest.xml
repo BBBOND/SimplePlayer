@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kim.simpleplayer">
+    package="com.bbbond.simpleplayer">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -15,8 +15,8 @@
         android:supportsRtl="true">
 
         <service
-            android:name=".service.PlayerService"
-            android:icon="@drawable/ic_default_art" />
+            android:name="com.bbbond.simpleplayer.service.PlayerService"
+            android:icon="@drawable/ic_sp_default_art" />
     </application>
 
 </manifest>
