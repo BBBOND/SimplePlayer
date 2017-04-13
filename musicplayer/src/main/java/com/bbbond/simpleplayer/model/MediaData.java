@@ -42,7 +42,6 @@ public class MediaData implements MediaDataSourceI {
         displayIconUri = bundle.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI);
         // 专辑名
         album = bundle.getString(MediaMetadataCompat.METADATA_KEY_ALBUM);
-        // 专辑封面
         // 专辑艺术家
         albumArtist = bundle.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ARTIST);
         // 专辑封面路径

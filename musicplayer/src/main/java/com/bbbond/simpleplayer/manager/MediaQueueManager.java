@@ -1,6 +1,5 @@
 package com.bbbond.simpleplayer.manager;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -13,6 +12,7 @@ import com.bbbond.simpleplayer.utils.ImageCacheUtil;
 import java.util.List;
 
 /**
+ * 媒体队列管理器
  * Created by Weya on 2017/3/12.
  */
 
@@ -36,9 +36,9 @@ public class MediaQueueManager {
     }
 
     /**
-     * 设置当前播放位置
+     * 设置当前播放在列表中的位置
      *
-     * @param index
+     * @param index 列表中的位置
      */
     public void setCurrentIndex(int index) {
         if (index >= 0 && index < mPlayingQueue.size()) {
@@ -50,8 +50,8 @@ public class MediaQueueManager {
     /**
      * 通过MediaID确定当前播放的位置
      *
-     * @param mediaId
-     * @return
+     * @param mediaId 音乐ID
+     * @return 是否设置成功
      */
     public boolean setCurrentItem(String mediaId) {
         int index = QueueHelper.getIndexOnQueue(mPlayingQueue, mediaId);
@@ -62,8 +62,8 @@ public class MediaQueueManager {
     /**
      * 通过QueueId确定当前播放位置
      *
-     * @param queueId
-     * @return
+     * @param queueId 队列中的ID
+     * @return 是否设置成功
      */
     public boolean setCurrentItem(long queueId) {
         int index = QueueHelper.getIndexOnQueue(mPlayingQueue, queueId);
@@ -82,7 +82,7 @@ public class MediaQueueManager {
      * 跳转相应间隔
      *
      * @param amount -1为上一首/1为下一首
-     * @return
+     * @return 是否能够播放
      */
     public boolean skipQueuePosition(int amount) {
         int index = mCurrentIndex + amount;
@@ -102,7 +102,7 @@ public class MediaQueueManager {
     /**
      * 获取当前音乐
      *
-     * @return
+     * @return 当前播放的音乐，可为空
      */
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         if (!QueueHelper.isCurrentPlayable(mPlayingQueue, mCurrentIndex))
@@ -113,8 +113,8 @@ public class MediaQueueManager {
     /**
      * 设置新播放队列，不带初始值
      *
-     * @param title
-     * @param newQueue
+     * @param title 队列标题
+     * @param newQueue 新队列
      */
     public void setCurrentQueue(String title, List<MediaData> newQueue) {
         setCurrentQueue(title, newQueue, null);
@@ -123,9 +123,9 @@ public class MediaQueueManager {
     /**
      * 设置新播放队列，带初始值
      *
-     * @param title
-     * @param newQueue
-     * @param initialMediaId
+     * @param title 队列标题
+     * @param newQueue 新队列
+     * @param initialMediaId 第一首播放的音乐ID
      */
     public void setCurrentQueue(String title, List<MediaData> newQueue, String initialMediaId) {
         mPlayingQueue = QueueHelper.formatMediaData2QueueItem(newQueue);
@@ -139,7 +139,7 @@ public class MediaQueueManager {
     /**
      * 获取当前队列大小
      *
-     * @return
+     * @return 当前队列大小
      */
     public int getCurrentQueueSize() {
         if (mPlayingQueue == null)
@@ -147,7 +147,10 @@ public class MediaQueueManager {
         return mPlayingQueue.size();
     }
 
-    public void updateMetadata(final Context context) {
+    /**
+     * 更新状态Metadata数据
+     */
+    public void updateMetadata() {
         MediaSessionCompat.QueueItem currentMusic = getCurrentMusic();
         if (currentMusic == null) {
             mMediaDataUpdateListener.onMediaDataRetrieveError();
@@ -183,6 +186,11 @@ public class MediaQueueManager {
         }
     }
 
+    /**
+     * 通过id获取媒体资源
+     * @param musicId id
+     * @return 媒体资源
+     */
     public MediaMetadataCompat getMusic(String musicId) {
         for (MediaData data : SimplePlayer.getInstance().getMediaDataList()) {
             if (data.getMediaId().equals(musicId))

@@ -40,7 +40,7 @@ public class PlaybackManager implements Playback.Callback {
     public void onCompletion() {
         if (SimplePlayer.getInstance().isPlayContinuously() && mMediaQueueManager.skipQueuePosition(1)) {
             handlePlayRequest();
-            mMediaQueueManager.updateMetadata(mContext);
+            mMediaQueueManager.updateMetadata();
         } else {
             handleStopRequest(null);
         }
@@ -155,7 +155,7 @@ public class PlaybackManager implements Playback.Callback {
         public void onSkipToQueueItem(long id) {
             LogHelper.d(TAG, "跳转到: ", id);
             mMediaQueueManager.setCurrentItem(id);
-            mMediaQueueManager.updateMetadata(mContext);
+            mMediaQueueManager.updateMetadata();
         }
 
         @Override
@@ -168,7 +168,7 @@ public class PlaybackManager implements Playback.Callback {
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             LogHelper.d(TAG, "通过MediaId播放 mediaId:", mediaId, "  extras=", extras);
             mMediaQueueManager.setCurrentItem(mediaId);
-            mMediaQueueManager.updateMetadata(mContext);
+            mMediaQueueManager.updateMetadata();
             handlePlayRequest();
         }
 
@@ -192,7 +192,7 @@ public class PlaybackManager implements Playback.Callback {
             } else {
                 handleStopRequest("无法跳转");
             }
-            mMediaQueueManager.updateMetadata(mContext);
+            mMediaQueueManager.updateMetadata();
         }
 
         @Override
@@ -202,7 +202,7 @@ public class PlaybackManager implements Playback.Callback {
             } else {
                 handleStopRequest("无法跳转");
             }
-            mMediaQueueManager.updateMetadata(mContext);
+            mMediaQueueManager.updateMetadata();
         }
     }
 

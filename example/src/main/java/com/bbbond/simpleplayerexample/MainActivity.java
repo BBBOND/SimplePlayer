@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSessionDestroyed() {
                 super.onSessionDestroyed();
-                SimplePlayer.getInstance().release();
             }
 
             @Override
@@ -245,14 +244,14 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, url, Toast.LENGTH_SHORT).show();
             MediaData md = new MediaData();
             md.setMediaId("123");
-            md.setTitle("哈哈");
-            md.setDisplayTitle("呵呵");
-            md.setDisplaySubtitle("呵呵哒");
+            md.setTitle("Title");
+            md.setDisplayTitle("DisplayTitle");
+            md.setDisplaySubtitle("DisplaySubtitle");
             md.setMediaUri(url);
             md.setArtUri("http://g.hiphotos.baidu.com/baike/w%3D268%3Bg%3D0/sign=010ff86baa345982c58ae29434cf5690/faedab64034f78f061e4f6ec7e310a55b2191cc5.jpg");
             md.setAlbumArtUri("http://g.hiphotos.baidu.com/baike/w%3D268%3Bg%3D0/sign=010ff86baa345982c58ae29434cf5690/faedab64034f78f061e4f6ec7e310a55b2191cc5.jpg");
-            md.setArtist("鹏泊");
-            md.setAuthor("鹏泊");
+            md.setArtist("Artist");
+            md.setAuthor("Author");
             List<MediaData> mediaDatas = new ArrayList<>();
             mediaDatas.add(md);
             SimplePlayer.getInstance().setMediaDataList("music", mediaDatas, null);
@@ -324,13 +323,13 @@ public class MainActivity extends AppCompatActivity {
         MediaData mediaData = new MediaData()
                 .setMediaId(new Date().getTime() + "")
                 .setMediaUri(mEditText.getText().toString())
-                .setTitle("1")
-                .setDisplayTitle("2")
-                .setDisplaySubtitle("3")
+                .setTitle("Title")
+                .setDisplayTitle("DisplayTitle")
+                .setDisplaySubtitle("DisplaySubtitle")
                 .setArtUri(null)
                 .setAlbumArtUri(null)
-                .setArtist("4")
-                .setAuthor("5");
+                .setArtist("Artist")
+                .setAuthor("Author");
         boolean result = SimplePlayer.getInstance().addMediaData(mediaData);
         Toast.makeText(this, result ? "添加成功" : "添加失败", Toast.LENGTH_SHORT).show();
     }
