@@ -14,6 +14,10 @@ public class ResourceHelper {
 
     /**
      * 获取主题颜色
+     * @param context 上下文
+     * @param attribute 属性资源
+     * @param defaultColor 默认颜色
+     * @return 主题色
      */
     public static int getThemeColor(Context context, int attribute, int defaultColor) {
         int themeColor = 0;

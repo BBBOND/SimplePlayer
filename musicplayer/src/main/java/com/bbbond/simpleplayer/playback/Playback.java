@@ -23,11 +23,13 @@ public interface Playback {
 
     /**
      * Set the latest playback state as determined by the caller.
+     * @param state state
      */
     void setState(int state);
 
     /**
      * Get the current {@link android.media.session.PlaybackState#getState()}
+     * @return state
      */
     int getState();
 
@@ -77,6 +79,7 @@ public interface Playback {
 
     /**
      * Seek to the given position
+     * @param position position
      */
     void seekTo(int position);
 
@@ -103,6 +106,8 @@ public interface Playback {
          * on Playback status changed
          * Implementations can use this callback to update
          * playback state on the media sessions.
+         *
+         * @param state state
          */
         void onPlaybackStatusChanged(int state);
 
