@@ -21,8 +21,9 @@ SimplePlayer SDK是一个遵循谷歌MediaSession框架的SDK，在原生Android
 ## 使用
 
 ### 引入方式
-
-coming soon...
+```
+compile 'com.bbbond.sdk:simpleplayer:0.0.1'
+```
 
 ### 用前准备
 ```
